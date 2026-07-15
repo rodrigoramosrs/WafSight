@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/WafSight.Cli/WafSight.Cli.csproj" />
+    <Project Path="src/WafSight.Tests/WafSight.Tests.csproj" />
+    <Project Path="src/WafSight/WafSight.csproj" />
+  </Folder>
+</Solution>
