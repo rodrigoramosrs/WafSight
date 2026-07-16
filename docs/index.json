@@ -1,4 +1,5 @@
-[  { "name": "aot-publishing.md", "path": "docs/aot-publishing.md" },
+[
+  { "name": "aot-publishing.md", "path": "docs/aot-publishing.md" },
   { "name": "api-reference.md", "path": "docs/api-reference.md" },
   { "name": "cli-reference.md", "path": "docs/cli-reference.md" },
   { "name": "cli-verbosity.md", "path": "docs/cli-verbosity.md" },
