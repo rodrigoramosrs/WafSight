@@ -688,6 +688,9 @@ function init(){
       if(hash){
         const idx=state.entries.findIndex(e=>e.name.replace(/\.md$/i,'').toLowerCase()===hash.toLowerCase());
         if(idx!==-1)loadDoc(idx);
+      } else {
+        const readmeIdx=state.entries.findIndex(e=>e.name==='README.md');
+        if(readmeIdx!==-1)loadDoc(readmeIdx);
       }
     }catch{
       document.getElementById('menu').innerHTML='<p style="padding:20px;color:var(--text-muted);font-size:13px;text-align:center">Unable to load documentation index.</p>';
