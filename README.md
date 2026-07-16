@@ -13,17 +13,22 @@ Detects Web Application Firewalls (WAF) and Content Delivery Networks (CDN) by a
 - **Batch detection** with concurrency control
 - **Resilient HTTP client** with retry and timeout policies
 - **Dependency Injection support** for ASP.NET Core integration
-- **CLI tool** for command-line usage
+- **CLI tool** with configurable verbosity levels
+- **AOT native publishing** for cross-platform standalone executables
 - **Extensible provider system** for custom WAF detection
+- **Automatic versioning** (YYYY.M.0.MINOR format)
 
 ## Project Structure
 
 ```
 WafSight/
+├── .github/workflows/  # CI/CD automation
 ├── src/
 │   ├── WafSight/              # Core library (DLL)
-│   ├── WafSight.Cli/          # CLI tool
-│   └── WafSight.Tests/        # Unit tests
+│   ├── WafSight.Cli/          # CLI tool (AOT native)
+│   └── WafSight.Tests/        # Unit tests (xUnit)
+├── Directory.Build.props      # Shared MSBuild properties
+├── nuget.config               # NuGet configuration
 └── README.md
 ```
 
@@ -32,15 +37,25 @@ WafSight/
 ### Install the package
 
 ```bash
-dotnet add package WafSight
+dotnet add package WafSight.Core
 ```
 
 ### Use as a library
 
 ```csharp
 using WafSight;
+using Microsoft.Extensions.Logging;
 
+// With default logging
 using var client = new WafDetectorClient();
+
+// With custom ILoggerFactory
+var loggerFactory = LoggerFactory.Create(builder =>
+{
+    builder.AddConsole();
+    builder.SetMinimumLevel(LogLevel.Information);
+});
+using var client = new WafDetectorClient(loggerFactory);
 
 // Detect single URL
 var result = await client.DetectAsync("https://example.com");
@@ -66,15 +81,32 @@ var providers = client.ListProviders();
 ### Use the CLI
 
 ```bash
-# Detect a single URL
-wafsight detect https://example.com
+# Detect a single URL (shows result by default)
+WafSight detect https://example.com
+
+# Show detailed logs with verbosity levels
+WafSight -V 1 detect https://example.com    # Low: errors + basic status
+WafSight -V 2 detect https://example.com    # Medium: + headers, DNS, scores
+WafSight -V 3 detect https://example.com    # High: + payloads, evidence, timing
 
 # Batch detect from a file
-wafsight batch urls.txt
+WafSight batch urls.txt
 
 # List registered providers
-wafsight providers
+WafSight providers
+
+# Show help
+WafSight --help
 ```
+
+#### Verbosity Levels
+
+| Level | Description |
+|-------|-------------|
+| `0` or `None` | Only errors and critical information (default) |
+| `1` or `Low` | Errors + basic detection results |
+| `2` or `Medium` | Low + headers, DNS records, provider scores |
+| `3` or `High` | Medium + payload probing, evidence details, timing |
 
 ## Adding Custom Providers
 
@@ -129,6 +161,8 @@ client.RegisterProvider(new MyCustomProvider());
 ## Dependency Injection
 
 ```csharp
+using Microsoft.Extensions.DependencyInjection;
+
 services.AddWafDetector(options =>
 {
     options.Timeout = TimeSpan.FromSeconds(15);
@@ -173,6 +207,39 @@ public class MyService
 | Imperva | WAF | 75 |
 | Sucuri | WAF | 70 |
 | F5 BIG-IP | WAF | 65 |
+
+## Versioning
+
+Version format: `YYYY.M.0.MINOR`
+
+- **YYYY**: Current year
+- **M**: Current month
+- **0**: Major (fixed)
+- **MINOR**: Incremental counter per month
+
+Example: `2026.7.0.1` = 1st release of July 2026
+
+The version is automatically calculated by CI/CD based on existing GitHub releases.
+
+## CI/CD
+
+Automated workflow on push to `main`:
+1. **Build & Test** - Runs all tests
+2. **Publish NuGet** - Pushes `WafSight.Core` package
+3. **Publish Release** - Creates GitHub Release with AOT binaries:
+   - `WafSight-win-x64.zip`
+   - `WafSight-linux-x64.tar.gz`
+   - `WafSight-osx-x64.tar.gz`
+   - `WafSight-osx-arm64.tar.gz`
+
+### Required Secrets
+
+- `NUGET_API_KEY` - NuGet.org API key for package publishing
+
+### Environments
+
+- `nuget-publish` - Protects NuGet publishing
+- `github-release` - Protects release creation
 
 ## Requirements
 
