@@ -357,12 +357,14 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Download publish artifacts
+      - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
-          pattern: wafsight-*
           merge-multiple: true
+
+      - name: Remove non-binary files
+        run: find artifacts/ -type f \( -name '*.trx' -o -name '*.snupkg' -o -name '*.nupkg' \) -delete
 
       - name: List artifacts
         run: ls -la artifacts/
