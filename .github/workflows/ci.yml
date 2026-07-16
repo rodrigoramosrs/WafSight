@@ -141,6 +141,8 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     environment: github-release
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -163,62 +165,100 @@ jobs:
 
       - name: Publish win-x64
         run: |
-          dotnet publish src/WafSight/WafSight.csproj \
+          set -e
+          dotnet publish src/WafSight.Cli/WafSight.Cli.csproj \
             -c ${{ env.CONFIGURATION }} \
             -r win-x64 \
+            -p:SelfContained=true \
+            -p:PublishSingleFile=true \
             -p:Aot=true \
             -p:StripSymbols=true \
             -p:IlcFoldIdenticalMethodBodies=true \
             -p:Version=${{ needs.calculate-version.outputs.version }} \
             -o publish/win-x64
+          mv publish/win-x64/WafSight.Cli.exe publish/win-x64/wafsight.exe
+          mv publish/win-x64/WafSight.Cli.pdb publish/win-x64/wafsight.pdb 2>/dev/null || true
+          echo "Publish win-x64 artifacts:"
+          ls -la publish/win-x64/
 
       - name: Publish linux-x64
         run: |
-          dotnet publish src/WafSight/WafSight.csproj \
+          set -e
+          dotnet publish src/WafSight.Cli/WafSight.Cli.csproj \
             -c ${{ env.CONFIGURATION }} \
             -r linux-x64 \
+            -p:SelfContained=true \
+            -p:PublishSingleFile=true \
             -p:Aot=true \
             -p:StripSymbols=true \
             -p:IlcFoldIdenticalMethodBodies=true \
             -p:Version=${{ needs.calculate-version.outputs.version }} \
             -o publish/linux-x64
+          mv publish/linux-x64/WafSight.Cli publish/linux-x64/wafsight
+          echo "Publish linux-x64 artifacts:"
+          ls -la publish/linux-x64/
 
       - name: Publish osx-x64
         run: |
-          dotnet publish src/WafSight/WafSight.csproj \
+          set -e
+          dotnet publish src/WafSight.Cli/WafSight.Cli.csproj \
             -c ${{ env.CONFIGURATION }} \
             -r osx-x64 \
+            -p:SelfContained=true \
+            -p:PublishSingleFile=true \
             -p:Aot=true \
             -p:StripSymbols=true \
             -p:IlcFoldIdenticalMethodBodies=true \
             -p:Version=${{ needs.calculate-version.outputs.version }} \
             -o publish/osx-x64
+          mv publish/osx-x64/WafSight.Cli publish/osx-x64/wafsight
+          echo "Publish osx-x64 artifacts:"
+          ls -la publish/osx-x64/
 
       - name: Publish osx-arm64
         run: |
-          dotnet publish src/WafSight/WafSight.csproj \
+          set -e
+          dotnet publish src/WafSight.Cli/WafSight.Cli.csproj \
             -c ${{ env.CONFIGURATION }} \
             -r osx-arm64 \
+            -p:SelfContained=true \
+            -p:PublishSingleFile=true \
             -p:Aot=true \
             -p:StripSymbols=true \
             -p:IlcFoldIdenticalMethodBodies=true \
             -p:Version=${{ needs.calculate-version.outputs.version }} \
             -o publish/osx-arm64
+          mv publish/osx-arm64/WafSight.Cli publish/osx-arm64/wafsight
+          echo "Publish osx-arm64 artifacts:"
+          ls -la publish/osx-arm64/
 
       - name: Package win-x64
         run: |
-          cd publish/win-x64
-          zip -r ../../../WafSight-win-x64.zip .
-          cd ../..
+          set -e
+          zip -r ../../../WafSight-win-x64.zip ./publish/win-x64/wafsight.exe
+          echo "Package win-x64 created:"
+          ls -la WafSight-win-x64.zip
 
       - name: Package linux-x64
-        run: tar -czf WafSight-linux-x64.tar.gz -C publish/linux-x64 .
+        run: |
+          set -e
+          tar -czf WafSight-linux-x64.tar.gz -C publish/linux-x64 wafsight
+          echo "Package linux-x64 created:"
+          ls -la WafSight-linux-x64.tar.gz
 
       - name: Package osx-x64
-        run: tar -czf WafSight-osx-x64.tar.gz -C publish/osx-x64 .
+        run: |
+          set -e
+          tar -czf WafSight-osx-x64.tar.gz -C publish/osx-x64 wafsight
+          echo "Package osx-x64 created:"
+          ls -la WafSight-osx-x64.tar.gz
 
       - name: Package osx-arm64
-        run: tar -czf WafSight-osx-arm64.tar.gz -C publish/osx-arm64 .
+        run: |
+          set -e
+          tar -czf WafSight-osx-arm64.tar.gz -C publish/osx-arm64 wafsight
+          echo "Package osx-arm64 created:"
+          ls -la WafSight-osx-arm64.tar.gz
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -228,7 +268,7 @@ jobs:
           body: |
             ## WafSight v${{ needs.calculate-version.outputs.version }}
 
-            ### Binários disponíveis (AOT Native):
+            ### Binários disponíveis (AOT Native, autocontidos):
             - **Windows x64** — `WafSight-win-x64.zip`
             - **Linux x64** — `WafSight-linux-x64.tar.gz`
             - **macOS x64** — `WafSight-osx-x64.tar.gz`
@@ -238,13 +278,15 @@ jobs:
             ```bash
             # Linux / macOS
             tar -xzf WafSight-linux-x64.tar.gz
-            chmod +x WafSight
+            chmod +x wafsight
+            ./wafsight detect https://example.com
 
-            # Uso
-            ./WafSight detect https://example.com
+            # Windows (PowerShell)
+            Expand-Archive WafSight-win-x64.zip -DestinationPath .
+            .\\wafsight.exe detect https://example.com
             ```
 
-            ### NuGet
+            ### NuGet (biblioteca .NET)
             ```bash
             dotnet add package WafSight --version ${{ needs.calculate-version.outputs.version }}
             ```

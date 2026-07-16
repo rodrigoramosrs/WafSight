@@ -4,6 +4,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
+
     <PackageId>WafSight</PackageId>
     <Version>2.0.0</Version>
     <Authors>WafSight Team</Authors>
@@ -16,6 +17,8 @@
     <IsAotCompatible>true</IsAotCompatible>
     <IlcOptimizationPreference>Speed</IlcOptimizationPreference>
     <IlcFoldIdenticalMethodBodies>true</IlcFoldIdenticalMethodBodies>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="DnsClient" Version="1.7.0" />
