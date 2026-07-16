@@ -119,7 +119,7 @@ jobs:
         run: dotnet restore
 
       - name: Pack NuGet
-        run: dotnet pack src/WafSight/WafSight.csproj --configuration ${{ env.CONFIGURATION }} --no-build -p:Version=${{ needs.calculate-version.outputs.version }} -o nupkg
+        run: dotnet pack src/WafSight/WafSight.csproj --configuration ${{ env.CONFIGURATION }} -p:Version=${{ needs.calculate-version.outputs.version }} -o nupkg
 
       - name: List packed files
         run: ls -la nupkg/
