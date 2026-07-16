@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link rel="icon" href="../assets/logo.ico">
+<title>WafSight Documentation</title>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+:root {
+  --bg: #ffffff;
+  --bg-sidebar: #f8f9fa;
+  --bg-code: #f4f4f5;
+  --text: #1a1a2e;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+  --accent: #3b82f6;
+  --accent-hover: #2563eb;
+  --hover: #f1f5f9;
+  --active: #dbeafe;
+  --shadow: rgba(0,0,0,0.08);
+}
+[data-theme="dark"] {
+  --bg: #0f172a;
+  --bg-sidebar: #1e293b;
+  --bg-code: #1e293b;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --border: #334155;
+  --accent: #60a5fa;
+  --accent-hover: #93bbfc;
+  --hover: #334155;
+  --active: #1e3a5f;
+  --shadow: rgba(0,0,0,0.3);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  transition:background .3s,color .3s;
+}
+#app{display:flex;min-height:100vh}
+#sidebar{
+  width:280px;
+  min-width:280px;
+  background:var(--bg-sidebar);
+  border-right:1px solid var(--border);
+  display:flex;
+  flex-direction:column;
+  height:100vh;
+  position:sticky;
+  top:0;
+  overflow:hidden;
+  transition:background .3s,border-color .3s;
+}
+.sidebar-header{
+  padding:20px;
+  border-bottom:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  transition:border-color .3s;
+}
+.sidebar-header h2{font-size:18px;font-weight:700}
+#theme-toggle{
+  background:none;
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:6px 10px;
+  cursor:pointer;
+  font-size:16px;
+  transition:background .2s,border-color .3s;
+}
+#theme-toggle:hover{background:var(--hover)}
+#menu{
+  flex:1;
+  overflow-y:auto;
+  padding:8px;
+}
+#menu a{
+  display:block;
+  padding:10px 14px;
+  border-radius:6px;
+  color:var(--text);
+  text-decoration:none;
+  font-size:14px;
+  line-height:1.4;
+  transition:background .15s,color .15s;
+  cursor:pointer;
+}
+#menu a:hover{background:var(--hover)}
+#menu a.active{background:var(--active);color:var(--accent);font-weight:600}
+#menu a .badge{display:none}
+#content{
+  flex:1;
+  overflow-y:auto;
+  padding:48px 64px;
+  max-width:960px;
+  transition:background .3s;
+}
+#markdown{line-height:1.8;font-size:16px}
+#markdown h1{margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid var(--border);font-size:32px;font-weight:700}
+#markdown h2{margin-top:40px;margin-bottom:16px;font-size:24px;font-weight:600;color:var(--accent)}
+#markdown h3{margin-top:32px;margin-bottom:12px;font-size:20px;font-weight:600}
+#markdown h4{margin-top:24px;margin-bottom:8px;font-size:16px;font-weight:600}
+#markdown p{margin-bottom:16px}
+#markdown a{color:var(--accent);text-decoration:none}
+#markdown a:hover{text-decoration:underline}
+#markdown ul,#markdown ol{padding-left:24px;margin-bottom:16px}
+#markdown li{margin-bottom:4px}
+#markdown code{
+  background:var(--bg-code);
+  padding:2px 6px;
+  border-radius:4px;
+  font-size:14px;
+  font-family:ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace;
+  transition:background .3s;
+}
+#markdown pre{
+  background:var(--bg-code);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:16px 20px;
+  overflow-x:auto;
+  margin-bottom:20px;
+  transition:background .3s,border-color .3s;
+}
+#markdown pre code{
+  background:none;
+  padding:0;
+  font-size:14px;
+  line-height:1.6;
+}
+#markdown blockquote{
+  border-left:4px solid var(--accent);
+  padding:12px 20px;
+  margin-bottom:20px;
+  background:var(--bg-sidebar);
+  border-radius:0 8px 8px 0;
+  color:var(--text-muted);
+  transition:background .3s;
+}
+#markdown img{max-width:100%;border-radius:8px;margin:20px 0}
+#markdown table{
+  width:100%;
+  border-collapse:collapse;
+  margin-bottom:20px;
+}
+#markdown th,#markdown td{
+  padding:10px 14px;
+  border:1px solid var(--border);
+  text-align:left;
+  transition:border-color .3s;
+}
+#markdown th{background:var(--bg-sidebar);font-weight:600}
+#markdown hr{margin:32px 0;border:none;border-top:1px solid var(--border)}
+#markdown .loading{color:var(--text-muted);font-style:italic}
+.empty-state{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  height:60vh;
+  color:var(--text-muted);
+  text-align:center;
+}
+.empty-state h2{font-size:24px;margin-bottom:8px;color:var(--text)}
+.empty-state p{font-size:16px;max-width:400px}
+
+@media(max-width:768px){
+  #sidebar{width:100%;min-width:unset;height:auto;position:relative;border-right:none;border-bottom:1px solid var(--border)}
+  #app{flex-direction:column}
+  #content{padding:24px 20px}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <aside id="sidebar">
+    <div class="sidebar-header">
+      <img src="../assets/logo.png" alt="WafSight" width="28" height="28" style="border-radius:4px">
+      <h2 style="flex:1;margin-left:10px">WafSight Docs</h2>
+      <button id="theme-toggle" aria-label="Toggle theme">&#9790;</button>
+    </div>
+    <nav id="menu"></nav>
+  </aside>
+  <main id="content">
+    <div id="markdown">
+      <div class="empty-state">
+        <h2>WafSight Documentation</h2>
+        <p>Select a topic from the sidebar to get started.</p>
+      </div>
+    </div>
+  </main>
+</div>
+<script>
+const state = {
+  theme: localStorage.getItem('theme') || 'light',
+  entries: [],
+  current: null,
+};
+
+function formatName(name) {
+  return name.replace(/\.md$/i, '').replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
+async function fetchJSON(url) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Failed to fetch ${url}`);
+  return res.json();
+}
+
+async function fetchText(url) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Failed to fetch ${url}`);
+  return res.text();
+}
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  document.getElementById('theme-toggle').textContent = theme === 'dark' ? '\u2600' : '\u263E';
+  localStorage.setItem('theme', theme);
+  state.theme = theme;
+}
+
+function toggleTheme() {
+  applyTheme(state.theme === 'dark' ? 'light' : 'dark');
+}
+
+function renderSidebar(entries) {
+  const menu = document.getElementById('menu');
+  menu.innerHTML = entries.map((e, i) =>
+    `<a href="#" data-index="${i}" class="${state.current === i ? 'active' : ''}">${formatName(e.name)}</a>`
+  ).join('');
+}
+
+function renderMarkdown(html) {
+  const el = document.getElementById('markdown');
+  el.innerHTML = html;
+  el.querySelectorAll('a').forEach(a => {
+    const href = a.getAttribute('href');
+    if (href && !href.startsWith('http') && !href.startsWith('#') && !href.startsWith('mailto:')) {
+      a.addEventListener('click', e => {
+        e.preventDefault();
+        const clean = href.replace(/^docs\//, '');
+        const target = state.entries.find(e =>
+          e.name === clean || e.path === href || e.path === `docs/${clean}`
+        );
+        if (target) loadDoc(state.entries.indexOf(target));
+      });
+    }
+  });
+}
+
+function showLoading() {
+  document.getElementById('markdown').innerHTML = '<p class="loading">Loading...</p>';
+}
+
+function showError(msg) {
+  document.getElementById('markdown').innerHTML = `<p style="color:#ef4444">${msg}</p>`;
+}
+
+async function loadDoc(index) {
+  const entry = state.entries[index];
+  if (!entry) return;
+  state.current = index;
+  showLoading();
+  document.querySelectorAll('#menu a').forEach(a => a.classList.remove('active'));
+  document.querySelector(`#menu a[data-index="${index}"]`)?.classList.add('active');
+  try {
+    const md = await fetchText(entry.path.replace(/^docs\//, ''));
+    const html = marked.parse(md, { breaks: true });
+    renderMarkdown(html);
+    document.getElementById('content').scrollTop = 0;
+    window.location.hash = entry.name.replace(/\.md$/i, '');
+  } catch {
+    showError('Failed to load document.');
+  }
+}
+
+function initSidebarClick() {
+  document.getElementById('menu').addEventListener('click', e => {
+    const a = e.target.closest('a');
+    if (!a) return;
+    e.preventDefault();
+    const index = parseInt(a.dataset.index);
+    if (!isNaN(index)) loadDoc(index);
+  });
+}
+
+async function init() {
+  applyTheme(state.theme);
+  initSidebarClick();
+  document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+  try {
+    state.entries = await fetchJSON('index.json');
+    renderSidebar(state.entries);
+    const hash = window.location.hash.replace('#', '');
+    if (hash) {
+      const idx = state.entries.findIndex(e =>
+        e.name.replace(/\.md$/i, '').toLowerCase() === hash.toLowerCase()
+      );
+      if (idx !== -1) loadDoc(idx);
+    }
+  } catch {
+    document.getElementById('menu').innerHTML = '<p style="padding:14px;color:var(--text-muted)">Failed to load index.</p>';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

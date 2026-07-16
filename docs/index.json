@@ -1,0 +1,16 @@
+[  { "name": "aot-publishing.md", "path": "docs/aot-publishing.md" },
+  { "name": "api-reference.md", "path": "docs/api-reference.md" },
+  { "name": "cli-reference.md", "path": "docs/cli-reference.md" },
+  { "name": "cli-verbosity.md", "path": "docs/cli-verbosity.md" },
+  { "name": "contributing.md", "path": "docs/contributing.md" },
+  { "name": "custom-providers.md", "path": "docs/custom-providers.md" },
+  { "name": "detection-methods.md", "path": "docs/detection-methods.md" },
+  { "name": "di-integration.md", "path": "docs/di-integration.md" },
+  { "name": "installation.md", "path": "docs/installation.md" },
+  { "name": "library-integration.md", "path": "docs/library-integration.md" },
+  { "name": "multi-platform.md", "path": "docs/multi-platform.md" },
+  { "name": "performance.md", "path": "docs/performance.md" },
+  { "name": "provider-architecture.md", "path": "docs/provider-architecture.md" },
+  { "name": "quickstart.md", "path": "docs/quickstart.md" },
+  { "name": "troubleshooting.md", "path": "docs/troubleshooting.md" }
+]
