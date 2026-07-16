@@ -17,7 +17,7 @@ WafSight CLI is published as AOT native executables for multiple platforms:
 
 ### Prerequisites
 
-- .NET 8.0 SDK
+- .NET 10.0 SDK
 - Target platform (cross-compilation not supported for AOT)
 
 ### Build All Platforms
@@ -236,5 +236,4 @@ sudo yum install libicu openssl
 ## See Also
 
 - [AOT Publishing](aot-publishing.md) - AOT compilation details
-- [CI/CD Overview](cicd-overview.md) - Automated builds
-- [GitHub Actions](github-actions.md) - CI/CD configuration
+

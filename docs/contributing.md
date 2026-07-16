@@ -22,7 +22,7 @@ This project follows the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.
 
 ### Prerequisites
 
-- .NET 8.0 SDK or later
+- .NET 10.0 SDK or later
 - Git
 - IDE (Visual Studio, VS Code, Rider, etc.)
 
@@ -153,7 +153,7 @@ dotnet test -c Release --logger "trx;LogFileName=test-results.trx"
 dotnet build src/WafSight.Cli/WafSight.Cli.csproj -c Release
 
 # Run CLI
-.\src\WafSight.Cli\bin\Release\net8.0\waf-sight.exe --help
+.\src\WafSight.Cli\bin\Release\net10.0\waf-sight.exe --help
 ```
 
 ## Pull Requests

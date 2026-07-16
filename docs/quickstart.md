@@ -4,7 +4,7 @@ This guide will walk you through your first steps with WafSight, from installati
 
 ## Prerequisites
 
-- .NET 8.0 SDK installed
+- .NET 10.0 SDK installed
 - Basic knowledge of C# or command-line usage
 
 ## Part 1: Using the CLI (Easiest)
@@ -89,7 +89,7 @@ https://aws.amazon.com                    AWS           AWS           48ms
 ```bash
 dotnet new console -n MyDetector
 cd MyDetector
-dotnet add package WafSight.Core
+dotnet add package WafSight
 ```
 
 ### Step 2: Write Detection Code
@@ -172,7 +172,7 @@ foreach (var (url, result) in results)
 - [CLI Reference](cli-reference.md) - Complete CLI documentation
 - [Library Integration](library-integration.md) - Advanced library usage
 - [Custom Providers](custom-providers.md) - Create your own detectors
-- [CI/CD Integration](cicd-overview.md) - Automate your workflow
+
 
 ## Common Use Cases
 
@@ -206,9 +206,9 @@ if (result.HasWaf)
 
 **Issue**: Package not found
 ```bash
-dotnet add package WafSight.Core
+dotnet add package WafSight
 ```
-Note: Package name is `WafSight.Core`, not `WafSight`
+Note: Package name is `WafSight`, not `WafSight`
 
 **Issue**: CLI not recognized
 ```bash

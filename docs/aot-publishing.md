@@ -12,7 +12,7 @@ AOT (Ahead-of-Time) compilation transforms .NET assemblies into native executabl
 
 ## Requirements
 
-- .NET 8.0 SDK (preview or later)
+- .NET 10.0 SDK (preview or later)
 - Target platform SDK installed:
   - **Windows**: Windows SDK
   - **Linux**: Linux development tools
@@ -194,5 +194,4 @@ chmod +x publish/linux-x64/WafSightCli
 ## See Also
 
 - [Multi-Platform Builds](multi-platform.md) - Building for all platforms
-- [CI/CD Overview](cicd-overview.md) - Automated publishing
-- [GitHub Actions](github-actions.md) - CI/CD configuration
+

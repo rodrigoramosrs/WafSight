@@ -4,7 +4,7 @@ This guide covers how to install WafSight in your project.
 
 ## Requirements
 
-- **.NET 8.0** or later
+- **.NET 10.0** or later
 - **Visual Studio 2022** (optional, for IDE support)
 - **dotnet CLI** (for command-line builds)
 
@@ -18,13 +18,13 @@ dotnet --version
 ### Using dotnet CLI
 
 ```bash
-dotnet add package WafSight.Core
+dotnet add package WafSight
 ```
 
 ### Using Package Manager Console (Visual Studio)
 
 ```
-Install-Package WafSight.Core
+Install-Package WafSight
 ```
 
 ### Manual (edit .csproj)
@@ -32,7 +32,7 @@ Install-Package WafSight.Core
 Add to your project file:
 ```xml
 <ItemGroup>
-  <PackageReference Include="WafSight.Core" Version="*" />
+  <PackageReference Include="WafSight" Version="*" />
 </ItemGroup>
 ```
 
@@ -80,7 +80,7 @@ Create a new console app:
 ```bash
 dotnet new console -n MyWafDetector
 cd MyWafDetector
-dotnet add package WafSight.Core
+dotnet add package WafSight
 ```
 
 ## Next Steps
@@ -93,16 +93,16 @@ dotnet add package WafSight.Core
 
 | WafSight Version | .NET Version | Status |
 |-----------------|--------------|--------|
-| 2.x.x | .NET 8.0 | Current |
+| 2.x.x | .NET 10.0 | Current |
 | 1.x.x | .NET 6.0 | Legacy |
 
 ## Troubleshooting
 
 ### Package not found
-Make sure you're using the correct package name: `WafSight.Core` (not `WafSight`)
+Make sure you're using the correct package name: `WafSight` (not `WafSight`)
 
 ### .NET version too old
-WafSight requires .NET 8.0. Install from [dotnet.microsoft.com](https://dotnet.microsoft.com/download)
+WafSight requires .NET 10.0. Install from [dotnet.microsoft.com](https://dotnet.microsoft.com/download)
 
 ### NuGet source issues
 Ensure you have nuget.org configured:
