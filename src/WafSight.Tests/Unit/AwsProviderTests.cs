@@ -3,46 +3,46 @@ using WafSight.Models;
 using WafSight.Providers;
 using Xunit;
 
-namespace WafSight.Tests.Tests;
+namespace WafSight.Tests.Unit;
 
-public class AzureProviderTests
+public class AwsProviderTests
 {
-    private readonly AzureProvider _provider = new();
+    private readonly AwsProvider _provider = new();
 
     [Fact]
-    public async Task DetectAsync_WithAzureRef_DetectsAzure()
+    public async Task DetectAsync_WithXAmzCfId_DetectsCloudFront()
     {
         var response = new HttpResponseData
         {
             StatusCode = 200,
             Headers = new Dictionary<string, string>
             {
-                { "x-azure-ref", "20240101T000000Z-abc123" }
+                { "x-amz-cf-id", "abcdefgh-1234-5678-abcd-123456789abc" }
             }
         };
 
         var evidence = await _provider.PassiveDetectAsync(response);
-        evidence.Should().Contain(e => e.Signature == "x-azure-ref-header");
+        evidence.Should().Contain(e => e.Signature == "x-amz-cf-id-header");
     }
 
     [Fact]
-    public async Task DetectAsync_WithArrLogId_DetectsAzure()
+    public async Task DetectAsync_WithXAmzCfPop_DetectsCloudFront()
     {
         var response = new HttpResponseData
         {
             StatusCode = 200,
             Headers = new Dictionary<string, string>
             {
-                { "x-arr-log-id", "abc123-def456" }
+                { "x-amz-cf-pop", "NRT51-P1" }
             }
         };
 
         var evidence = await _provider.PassiveDetectAsync(response);
-        evidence.Should().Contain(e => e.Signature == "x-arr-log-id-header");
+        evidence.Should().Contain(e => e.Signature == "x-amz-cf-pop-header");
     }
 
     [Fact]
-    public async Task DetectAsync_NoAzureHeaders_ReturnsEmpty()
+    public async Task DetectAsync_WithNoAwsHeaders_ReturnsEmptyEvidence()
     {
         var response = new HttpResponseData
         {
@@ -55,13 +55,5 @@ public class AzureProviderTests
 
         var evidence = await _provider.PassiveDetectAsync(response);
         evidence.Should().BeEmpty();
-    }
-
-    [Fact]
-    public void Metadata_ReturnsCorrectValues()
-    {
-        _provider.Name.Should().Be("Azure");
-        _provider.ProviderType.Should().Be(ProviderType.Both);
-        _provider.Priority.Should().Be(80);
     }
 }

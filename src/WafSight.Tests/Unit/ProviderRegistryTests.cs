@@ -4,7 +4,7 @@ using WafSight.Providers;
 using WafSight.Registry;
 using Xunit;
 
-namespace WafSight.Tests.Tests;
+namespace WafSight.Tests.Unit;
 
 public class ProviderRegistryTests
 {

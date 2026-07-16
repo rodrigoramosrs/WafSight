@@ -3,46 +3,46 @@ using WafSight.Models;
 using WafSight.Providers;
 using Xunit;
 
-namespace WafSight.Tests.Tests;
+namespace WafSight.Tests.Unit;
 
-public class AkamaiProviderTests
+public class AzureProviderTests
 {
-    private readonly AkamaiProvider _provider = new();
+    private readonly AzureProvider _provider = new();
 
     [Fact]
-    public async Task DetectAsync_WithAkamaiTransformed_DetectsAkamai()
+    public async Task DetectAsync_WithAzureRef_DetectsAzure()
     {
         var response = new HttpResponseData
         {
             StatusCode = 200,
             Headers = new Dictionary<string, string>
             {
-                { "x-akamai-transformed", "9 -" }
+                { "x-azure-ref", "20240101T000000Z-abc123" }
             }
         };
 
         var evidence = await _provider.PassiveDetectAsync(response);
-        evidence.Should().Contain(e => e.Signature == "x-akamai-transformed-header");
+        evidence.Should().Contain(e => e.Signature == "x-azure-ref-header");
     }
 
     [Fact]
-    public async Task DetectAsync_WithAkamaiServer_DetectsServer()
+    public async Task DetectAsync_WithArrLogId_DetectsAzure()
     {
         var response = new HttpResponseData
         {
             StatusCode = 200,
             Headers = new Dictionary<string, string>
             {
-                { "server", "AkamaiG2" }
+                { "x-arr-log-id", "abc123-def456" }
             }
         };
 
         var evidence = await _provider.PassiveDetectAsync(response);
-        evidence.Should().Contain(e => e.Signature == "akamai-server-header");
+        evidence.Should().Contain(e => e.Signature == "x-arr-log-id-header");
     }
 
     [Fact]
-    public async Task DetectAsync_NoAkamaiHeaders_ReturnsEmpty()
+    public async Task DetectAsync_NoAzureHeaders_ReturnsEmpty()
     {
         var response = new HttpResponseData
         {
@@ -60,9 +60,8 @@ public class AkamaiProviderTests
     [Fact]
     public void Metadata_ReturnsCorrectValues()
     {
-        _provider.Name.Should().Be("Akamai");
+        _provider.Name.Should().Be("Azure");
         _provider.ProviderType.Should().Be(ProviderType.Both);
-        _provider.Enabled.Should().BeTrue();
-        _provider.Priority.Should().Be(90);
+        _provider.Priority.Should().Be(80);
     }
 }

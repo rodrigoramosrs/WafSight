@@ -3,46 +3,46 @@ using WafSight.Models;
 using WafSight.Providers;
 using Xunit;
 
-namespace WafSight.Tests.Tests;
+namespace WafSight.Tests.Unit;
 
-public class AwsProviderTests
+public class AkamaiProviderTests
 {
-    private readonly AwsProvider _provider = new();
+    private readonly AkamaiProvider _provider = new();
 
     [Fact]
-    public async Task DetectAsync_WithXAmzCfId_DetectsCloudFront()
+    public async Task DetectAsync_WithAkamaiTransformed_DetectsAkamai()
     {
         var response = new HttpResponseData
         {
             StatusCode = 200,
             Headers = new Dictionary<string, string>
             {
-                { "x-amz-cf-id", "abcdefgh-1234-5678-abcd-123456789abc" }
+                { "x-akamai-transformed", "9 -" }
             }
         };
 
         var evidence = await _provider.PassiveDetectAsync(response);
-        evidence.Should().Contain(e => e.Signature == "x-amz-cf-id-header");
+        evidence.Should().Contain(e => e.Signature == "x-akamai-transformed-header");
     }
 
     [Fact]
-    public async Task DetectAsync_WithXAmzCfPop_DetectsCloudFront()
+    public async Task DetectAsync_WithAkamaiServer_DetectsServer()
     {
         var response = new HttpResponseData
         {
             StatusCode = 200,
             Headers = new Dictionary<string, string>
             {
-                { "x-amz-cf-pop", "NRT51-P1" }
+                { "server", "AkamaiG2" }
             }
         };
 
         var evidence = await _provider.PassiveDetectAsync(response);
-        evidence.Should().Contain(e => e.Signature == "x-amz-cf-pop-header");
+        evidence.Should().Contain(e => e.Signature == "akamai-server-header");
     }
 
     [Fact]
-    public async Task DetectAsync_WithNoAwsHeaders_ReturnsEmptyEvidence()
+    public async Task DetectAsync_NoAkamaiHeaders_ReturnsEmpty()
     {
         var response = new HttpResponseData
         {
@@ -55,5 +55,14 @@ public class AwsProviderTests
 
         var evidence = await _provider.PassiveDetectAsync(response);
         evidence.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Metadata_ReturnsCorrectValues()
+    {
+        _provider.Name.Should().Be("Akamai");
+        _provider.ProviderType.Should().Be(ProviderType.Both);
+        _provider.Enabled.Should().BeTrue();
+        _provider.Priority.Should().Be(90);
     }
 }

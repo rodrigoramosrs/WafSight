@@ -3,75 +3,62 @@ using WafSight.Models;
 using WafSight.Providers;
 using Xunit;
 
-namespace WafSight.Tests.Tests;
+namespace WafSight.Tests.Unit;
 
-public class SucuriProviderTests
+public class FastlyProviderTests
 {
-    private readonly SucuriProvider _provider = new();
+    private readonly FastlyProvider _provider = new();
 
     [Fact]
-    public async Task DetectAsync_WithSucuriId_DetectsSucuri()
+    public async Task DetectAsync_WithFastlyTie_DetectsFastly()
     {
         var response = new HttpResponseData
         {
             StatusCode = 200,
             Headers = new Dictionary<string, string>
             {
-                { "x-sucuri-id", "10001" }
+                { "x-tie", "FRA" }
             }
         };
 
         var evidence = await _provider.PassiveDetectAsync(response);
-        evidence.Should().Contain(e => e.Signature == "x-sucuri-id-header");
+        evidence.Should().Contain(e => e.Signature == "fastly-tie-header");
     }
 
     [Fact]
-    public async Task DetectAsync_WithSucuriCache_DetectsCache()
+    public async Task DetectAsync_WithFastlySurrogateKey_DetectsFastly()
     {
         var response = new HttpResponseData
         {
             StatusCode = 200,
             Headers = new Dictionary<string, string>
             {
-                { "x-sucuri-cache", "HIT" }
+                { "x-surrogate-key", "abc123 def456" }
             }
         };
 
         var evidence = await _provider.PassiveDetectAsync(response);
-        evidence.Should().Contain(e => e.Signature == "x-sucuri-cache-header");
+        evidence.Should().Contain(e => e.Signature == "fastly-surrogate-key-header");
     }
 
     [Fact]
-    public async Task DetectAsync_WithSucuriBlock_DetectsBlock()
+    public async Task DetectAsync_WithFastlyServer_DetectsServer()
     {
         var response = new HttpResponseData
         {
             StatusCode = 200,
             Headers = new Dictionary<string, string>
             {
-                { "x-sucuri-block", "Yes" }
+                { "server", "Fastly" }
             }
         };
 
         var evidence = await _provider.PassiveDetectAsync(response);
-        evidence.Should().Contain(e => e.Signature == "x-sucuri-block-header");
+        evidence.Should().Contain(e => e.Signature == "fastly-server-header");
     }
 
     [Fact]
-    public async Task DetectAsync_WithSucuriBody_DetectsBody()
-    {
-        var response = new HttpResponseData
-        {
-            StatusCode = 200,
-            Body = "<html>Access denied - sucuri webserver firewall</html>"
-        };
-
-        var evidence = await _provider.PassiveDetectAsync(response);
-        evidence.Should().Contain(e => e.Signature == "sucuri-body");
-    }
-
-    [Fact]
-    public async Task DetectAsync_NoSucuriHeaders_ReturnsEmpty()
+    public async Task DetectAsync_NoFastlyHeaders_ReturnsEmpty()
     {
         var response = new HttpResponseData
         {
@@ -89,8 +76,8 @@ public class SucuriProviderTests
     [Fact]
     public void Metadata_ReturnsCorrectValues()
     {
-        _provider.Name.Should().Be("Sucuri");
-        _provider.ProviderType.Should().Be(ProviderType.WAF);
-        _provider.Priority.Should().Be(70);
+        _provider.Name.Should().Be("Fastly");
+        _provider.ProviderType.Should().Be(ProviderType.CDN);
+        _provider.Priority.Should().Be(85);
     }
 }

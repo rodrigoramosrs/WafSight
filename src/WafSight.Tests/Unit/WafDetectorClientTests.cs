@@ -4,7 +4,7 @@ using WafSight.Models;
 using WafSight.Providers;
 using Xunit;
 
-namespace WafSight.Tests.Tests;
+namespace WafSight.Tests.Unit;
 
 public class WafDetectorClientBatchTests : IDisposable
 {

@@ -141,6 +141,8 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     environment: github-release
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -163,6 +165,7 @@ jobs:
 
       - name: Publish win-x64
         run: |
+          set -e
           dotnet publish src/WafSight/WafSight.csproj \
             -c ${{ env.CONFIGURATION }} \
             -r win-x64 \
@@ -171,9 +174,12 @@ jobs:
             -p:IlcFoldIdenticalMethodBodies=true \
             -p:Version=${{ needs.calculate-version.outputs.version }} \
             -o publish/win-x64
+          echo "Publish win-x64 artifacts:"
+          ls -la publish/win-x64/
 
       - name: Publish linux-x64
         run: |
+          set -e
           dotnet publish src/WafSight/WafSight.csproj \
             -c ${{ env.CONFIGURATION }} \
             -r linux-x64 \
@@ -182,9 +188,12 @@ jobs:
             -p:IlcFoldIdenticalMethodBodies=true \
             -p:Version=${{ needs.calculate-version.outputs.version }} \
             -o publish/linux-x64
+          echo "Publish linux-x64 artifacts:"
+          ls -la publish/linux-x64/
 
       - name: Publish osx-x64
         run: |
+          set -e
           dotnet publish src/WafSight/WafSight.csproj \
             -c ${{ env.CONFIGURATION }} \
             -r osx-x64 \
@@ -193,9 +202,12 @@ jobs:
             -p:IlcFoldIdenticalMethodBodies=true \
             -p:Version=${{ needs.calculate-version.outputs.version }} \
             -o publish/osx-x64
+          echo "Publish osx-x64 artifacts:"
+          ls -la publish/osx-x64/
 
       - name: Publish osx-arm64
         run: |
+          set -e
           dotnet publish src/WafSight/WafSight.csproj \
             -c ${{ env.CONFIGURATION }} \
             -r osx-arm64 \
@@ -204,12 +216,15 @@ jobs:
             -p:IlcFoldIdenticalMethodBodies=true \
             -p:Version=${{ needs.calculate-version.outputs.version }} \
             -o publish/osx-arm64
+          echo "Publish osx-arm64 artifacts:"
+          ls -la publish/osx-arm64/
 
       - name: Package win-x64
         run: |
-          cd publish/win-x64
-          zip -r ../../../WafSight-win-x64.zip .
-          cd ../..
+          set -e
+          zip -r ../../../WafSight-win-x64.zip ./publish/win-x64/*
+          echo "Package win-x64 created:"
+          ls -la WafSight-win-x64.zip
 
       - name: Package linux-x64
         run: tar -czf WafSight-linux-x64.tar.gz -C publish/linux-x64 .

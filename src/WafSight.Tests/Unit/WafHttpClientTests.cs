@@ -4,7 +4,7 @@ using FluentAssertions;
 using WafSight.Http;
 using Xunit;
 
-namespace WafSight.Tests.Tests;
+namespace WafSight.Tests.Unit;
 
 /// <summary>
 /// Tests for WafHttpClient resilience, timeouts, and headers

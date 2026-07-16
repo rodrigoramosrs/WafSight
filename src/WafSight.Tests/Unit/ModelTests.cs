@@ -2,7 +2,7 @@ using FluentAssertions;
 using WafSight.Models;
 using Xunit;
 
-namespace WafSight.Tests.Tests;
+namespace WafSight.Tests.Unit;
 
 public class ModelTests
 {
