@@ -9,7 +9,7 @@ WafSight provides first-class support for Microsoft.Extensions.DependencyInjecti
 ## Installation
 
 ```bash
-dotnet add package WafSight.Core
+dotnet add package WafSight
 ```
 
 ## Basic Registration

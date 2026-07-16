@@ -1,6 +1,23 @@
-# WafSight
+<p align="center">
+  <img src="assets/logo.png" alt="WafSight" width="140">
+</p>
+<h1 align="center">WafSight</h1>
+<p align="center">
+  <em>High-performance WAF/CDN detection library and CLI for .NET</em>
+</p>
 
-High-performance WAF/CDN detection library and CLI for .NET.
+<p align="center">
+  <a href="https://www.nuget.org/packages/WafSight"><img src="https://img.shields.io/nuget/v/WafSight?style=flat-square&logo=nuget&label=NuGet" alt="NuGet Version"></a>
+  <a href="https://www.nuget.org/packages/WafSight"><img src="https://img.shields.io/nuget/dt/WafSight?style=flat-square&logo=nuget&label=Downloads" alt="NuGet Downloads"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License"></a>
+  <a href="https://dotnet.microsoft.com"><img src="https://img.shields.io/badge/.NET-8.0-5C2D91?style=flat-square&logo=dotnet" alt=".NET"></a>
+  <a href="https://github.com/rodrigoramosrs/wafsight/actions"><img src="https://img.shields.io/github/actions/workflow/status/rodrigoramosrs/wafsight/ci.yml?style=flat-square&logo=github&label=Build" alt="Build"></a>
+  <a href="https://github.com/rodrigoramosrs/wafsight"><img src="https://img.shields.io/github/stars/rodrigoramosrs/wafsight?style=flat-square&logo=github&label=Stars" alt="Stars"></a>
+  <a href="https://github.com/rodrigoramosrs/wafsight"><img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey?style=flat-square" alt="Platform"></a>
+  <a href="https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot"><img src="https://img.shields.io/badge/AOT-Compatible-success?style=flat-square" alt="AOT"></a>
+</p>
+
+---
 
 Detects Web Application Firewalls (WAF) and Content Delivery Networks (CDN) by analyzing HTTP headers, response bodies, cookies, status codes, DNS records, timing, TLS certificates, and payload probing.
 
@@ -37,7 +54,7 @@ WafSight/
 ### Install the package
 
 ```bash
-dotnet add package WafSight.Core
+dotnet add package WafSight
 ```
 
 ### Use as a library
@@ -225,7 +242,7 @@ The version is automatically calculated by CI/CD based on existing GitHub releas
 
 Automated workflow on push to `main`:
 1. **Build & Test** - Runs all tests
-2. **Publish NuGet** - Pushes `WafSight.Core` package
+2. **Publish NuGet** - Pushes `WafSight` package
 3. **Publish Release** - Creates GitHub Release with AOT binaries:
    - `WafSight-win-x64.zip`
    - `WafSight-linux-x64.tar.gz`
@@ -243,8 +260,23 @@ Automated workflow on push to `main`:
 
 ## Requirements
 
-- .NET 8.0 or later
+- .NET 10.0 or later
 
-## License
+---
 
-MIT
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License"></a>
+  <a href="https://www.nuget.org/packages/WafSight"><img src="https://img.shields.io/nuget/v/WafSight?style=flat-square" alt="NuGet"></a>
+  <a href="https://github.com/rodrigoramosrs/wafsight"><img src="https://img.shields.io/github/stars/rodrigoramosrs/wafsight?style=flat-square&label=Stars" alt="GitHub Stars"></a>
+</p>
+
+## Special Thanks
+
+This project would not exist without the inspiration and knowledge provided by these incredible open-source projects:
+
+- [**waf-detector**](https://github.com/ammarion/waf-detector) — A fast and efficient WAF detection tool written in Go by Ammar Atef. Its architecture and provider model heavily influenced WafSight's design.
+- [**wafw00f**](https://github.com/EnableSecurity/wafw00f) — The legendary WAF fingerprinting tool by EnableSecurity. Its signature-based detection approach and extensive provider database set the standard for the entire ecosystem.
+
+If you find WafSight useful, consider showing your appreciation to these projects too — give them a star on GitHub, open issues, or contribute code. Open source thrives on community support.
+
+To the maintainers and contributors of these projects: thank you for paving the way.

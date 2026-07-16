@@ -17,7 +17,7 @@ Common issues and solutions for WafSight.
 dotnet tool install --global WafSight.Cli
 
 # Or use full path
-.\src\WafSight.Cli\bin\Debug\net8.0\waf-sight.exe
+.\src\WafSight.Cli\bin\Debug\net10.0\waf-sight.exe
 ```
 
 ### No Output
@@ -71,7 +71,7 @@ NU1101: Unable to find package WafSight
 **Solution:**
 ```bash
 # Correct package name
-dotnet add package WafSight.Core
+dotnet add package WafSight
 
 # Check NuGet source
 dotnet nuget list source
@@ -91,7 +91,7 @@ using WafSight;
 
 // Check package reference
 <ItemGroup>
-  <PackageReference Include="WafSight.Core" Version="*" />
+  <PackageReference Include="WafSight" Version="*" />
 </ItemGroup>
 ```
 
@@ -297,7 +297,7 @@ Build FAILED.
 # Check .NET version
 dotnet --version
 
-# Required: .NET 8.0 or later
+# Required: .NET 10.0 or later
 
 # Clean and rebuild
 dotnet clean
@@ -308,7 +308,7 @@ dotnet build -c Release
 
 **Error:**
 ```
-error NU1101: Unable to find package WafSight.Core
+error NU1101: Unable to find package WafSight
 ```
 
 **Solution:**
@@ -320,7 +320,7 @@ error NU1101: Unable to find package WafSight.Core
 # NuGet doesn't allow overwriting packages
 
 # Check package name
-# Must be: WafSight.Core
+# Must be: WafSight
 ```
 
 ### GitHub Release Fails

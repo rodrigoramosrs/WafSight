@@ -14,7 +14,7 @@ WafSight can be used as a library in any .NET application:
 ## Installation
 
 ```bash
-dotnet add package WafSight.Core
+dotnet add package WafSight
 ```
 
 ## Basic Usage

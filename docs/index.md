@@ -23,11 +23,6 @@ Welcome to the WafSight documentation. This guide covers everything you need to 
 - [AOT Publishing](aot-publishing.md) - Native executable compilation
 - [Multi-Platform Builds](multi-platform.md) - Building for Windows, Linux, macOS
 
-### CI/CD & Automation
-- [CI/CD Overview](cicd-overview.md) - Automated builds and releases
-- [GitHub Actions](github-actions.md) - Workflow configuration
-- [Versioning Strategy](versioning.md) - Automatic version calculation
-
 ### Advanced Topics
 - [Detection Methods](detection-methods.md) - How detection works internally
 - [Provider Architecture](provider-architecture.md) - Extending the system
@@ -53,9 +48,6 @@ docs/
 ├── api-reference.md            # Complete API docs
 ├── aot-publishing.md           # AOT native compilation
 ├── multi-platform.md           # Cross-platform builds
-├── cicd-overview.md            # CI/CD overview
-├── github-actions.md           # GitHub Actions workflow
-├── versioning.md               # Version calculation
 ├── detection-methods.md        # Detection internals
 ├── provider-architecture.md    # Provider system
 ├── performance.md              # Performance optimization
@@ -72,7 +64,7 @@ assets/
 
 - [README.md](../README.md) - Project overview
 - [GitHub Repository](https://github.com/rodrigoramosrs/wafsight)
-- [NuGet Package](https://www.nuget.org/packages/WafSight.Core)
+- [NuGet Package](https://www.nuget.org/packages/WafSight)
 
 ## Support
 
