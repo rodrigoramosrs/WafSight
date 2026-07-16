@@ -136,9 +136,9 @@ jobs:
           name: nuget-packages
           path: nupkg/*.nupkg
 
-  publish-win:
+  publish-release:
     needs: [calculate-version, build-and-test]
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     environment: github-release
     permissions:
@@ -165,61 +165,21 @@ jobs:
 
       - name: Publish win-x64
         run: |
-          dotnet publish src/WafSight.Cli/WafSight.Cli.csproj `
-            -c ${{ env.CONFIGURATION }} `
-            -r win-x64 `
-            -p:SelfContained=true `
-            -p:PublishSingleFile=true `
-            -p:Aot=true `
-            -p:StripSymbols=true `
-            -p:IlcFoldIdenticalMethodBodies=true `
-            -p:Version=${{ needs.calculate-version.outputs.version }} `
+          set -e
+          dotnet publish src/WafSight.Cli/WafSight.Cli.csproj \
+            -c ${{ env.CONFIGURATION }} \
+            -r win-x64 \
+            -p:SelfContained=true \
+            -p:PublishSingleFile=true \
+            -p:Aot=true \
+            -p:StripSymbols=true \
+            -p:IlcFoldIdenticalMethodBodies=true \
+            -p:Version=${{ needs.calculate-version.outputs.version }} \
             -o publish/win-x64
-          Rename-Item -Path publish/win-x64/WafSight.Cli.exe -NewName wafsight.exe
-          if (Test-Path publish/win-x64/WafSight.Cli.pdb) {
-            Rename-Item -Path publish/win-x64/WafSight.Cli.pdb -NewName wafsight.pdb
-          }
-          Write-Host "Publish win-x64 artifacts:"
-          Get-ChildItem publish/win-x64/
-
-      - name: Package win-x64
-        run: |
-          Compress-Archive -Path publish/win-x64/wafsight.exe -DestinationPath WafSight-win-x64.zip -Force
-          Write-Host "Package win-x64 created:"
-          Get-ChildItem WafSight-win-x64.zip
-
-      - name: Upload win-x64 artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: WafSight-win-x64
-          path: WafSight-win-x64.zip
-
-  publish-linux:
-    needs: [calculate-version, build-and-test]
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    environment: github-release
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
-
-      - name: Cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
-          restore-keys: |
-            ${{ runner.os }}-nuget-
-
-      - name: Restore
-        run: dotnet restore
+          mv publish/win-x64/WafSight.Cli.exe publish/win-x64/wafsight.exe
+          mv publish/win-x64/WafSight.Cli.pdb publish/win-x64/wafsight.pdb 2>/dev/null || true
+          echo "Publish win-x64 artifacts:"
+          ls -la publish/win-x64/
 
       - name: Publish linux-x64
         run: |
@@ -238,46 +198,6 @@ jobs:
           echo "Publish linux-x64 artifacts:"
           ls -la publish/linux-x64/
 
-      - name: Package linux-x64
-        run: |
-          set -e
-          tar -czf WafSight-linux-x64.tar.gz -C publish/linux-x64 wafsight
-          echo "Package linux-x64 created:"
-          ls -la WafSight-linux-x64.tar.gz
-
-      - name: Upload linux-x64 artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: WafSight-linux-x64
-          path: WafSight-linux-x64.tar.gz
-
-  publish-osx-x64:
-    needs: [calculate-version, build-and-test]
-    runs-on: macos-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    environment: github-release
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
-
-      - name: Cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
-          restore-keys: |
-            ${{ runner.os }}-nuget-
-
-      - name: Restore
-        run: dotnet restore
-
       - name: Publish osx-x64
         run: |
           set -e
@@ -294,46 +214,6 @@ jobs:
           mv publish/osx-x64/WafSight.Cli publish/osx-x64/wafsight
           echo "Publish osx-x64 artifacts:"
           ls -la publish/osx-x64/
-
-      - name: Package osx-x64
-        run: |
-          set -e
-          tar -czf WafSight-osx-x64.tar.gz -C publish/osx-x64 wafsight
-          echo "Package osx-x64 created:"
-          ls -la WafSight-osx-x64.tar.gz
-
-      - name: Upload osx-x64 artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: WafSight-osx-x64
-          path: WafSight-osx-x64.tar.gz
-
-  publish-osx-arm64:
-    needs: [calculate-version, build-and-test]
-    runs-on: macos-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    environment: github-release
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
-
-      - name: Cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
-          restore-keys: |
-            ${{ runner.os }}-nuget-
-
-      - name: Restore
-        run: dotnet restore
 
       - name: Publish osx-arm64
         run: |
@@ -352,31 +232,33 @@ jobs:
           echo "Publish osx-arm64 artifacts:"
           ls -la publish/osx-arm64/
 
+      - name: Package win-x64
+        run: |
+          set -e
+          zip -r ../../../WafSight-win-x64.zip ./publish/win-x64/wafsight.exe
+          echo "Package win-x64 created:"
+          ls -la WafSight-win-x64.zip
+
+      - name: Package linux-x64
+        run: |
+          set -e
+          tar -czf WafSight-linux-x64.tar.gz -C publish/linux-x64 wafsight
+          echo "Package linux-x64 created:"
+          ls -la WafSight-linux-x64.tar.gz
+
+      - name: Package osx-x64
+        run: |
+          set -e
+          tar -czf WafSight-osx-x64.tar.gz -C publish/osx-x64 wafsight
+          echo "Package osx-x64 created:"
+          ls -la WafSight-osx-x64.tar.gz
+
       - name: Package osx-arm64
         run: |
           set -e
           tar -czf WafSight-osx-arm64.tar.gz -C publish/osx-arm64 wafsight
           echo "Package osx-arm64 created:"
           ls -la WafSight-osx-arm64.tar.gz
-
-      - name: Upload osx-arm64 artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: WafSight-osx-arm64
-          path: WafSight-osx-arm64.tar.gz
-
-  create-release:
-    needs: [publish-win, publish-linux, publish-osx-x64, publish-osx-arm64]
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    environment: github-release
-    permissions:
-      contents: write
-    steps:
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -412,7 +294,17 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            artifacts/WafSight-win-x64/WafSight-win-x64.zip
-            artifacts/WafSight-linux-x64/WafSight-linux-x64.tar.gz
-            artifacts/WafSight-osx-x64/WafSight-osx-x64.tar.gz
-            artifacts/WafSight-osx-arm64/WafSight-osx-arm64.tar.gz
+            WafSight-win-x64.zip
+            WafSight-linux-x64.tar.gz
+            WafSight-osx-x64.tar.gz
+            WafSight-osx-arm64.tar.gz
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-binaries
+          path: |
+            WafSight-win-x64.zip
+            WafSight-linux-x64.tar.gz
+            WafSight-osx-x64.tar.gz
+            WafSight-osx-arm64.tar.gz
