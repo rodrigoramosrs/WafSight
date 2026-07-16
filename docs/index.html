@@ -689,7 +689,7 @@ function init(){
         const idx=state.entries.findIndex(e=>e.name.replace(/\.md$/i,'').toLowerCase()===hash.toLowerCase());
         if(idx!==-1)loadDoc(idx);
       } else {
-        const readmeIdx=state.entries.findIndex(e=>e.name==='README.md');
+        const readmeIdx=state.entries.findIndex(e=>e.name==='index.md');
         if(readmeIdx!==-1)loadDoc(readmeIdx);
       }
     }catch{

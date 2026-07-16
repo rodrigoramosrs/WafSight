@@ -1,5 +1,5 @@
 [
-  { "name": "README.md", "path": "README.md" },
+  { "name": "index.md", "path": "index.md" },
   { "name": "aot-publishing.md", "path": "docs/aot-publishing.md" },
   { "name": "api-reference.md", "path": "docs/api-reference.md" },
   { "name": "cli-reference.md", "path": "docs/cli-reference.md" },
