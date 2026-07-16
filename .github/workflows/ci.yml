@@ -37,7 +37,7 @@ jobs:
           MONTH=$(date -u +%-m)
 
           EXISTING=$(gh release list --limit 100 --json tagName |
-            jq -r '.[] | select(.tagName | test("^'"$YEAR".'"$MONTH"'.\\d+\\.\\d+$")) | .tagName' |
+            jq -r --arg year "$YEAR" --arg month "$MONTH" '.[] | select(.tagName | test("^" + $year + "." + $month + "\\.\\d+\\.\\d+$")) | .tagName' |
             sort -V | tail -1)
 
           if [ -z "$EXISTING" ]; then
