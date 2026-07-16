@@ -364,6 +364,9 @@ jobs:
           pattern: wafsight-*
           merge-multiple: true
 
+      - name: Remove non-binary files
+        run: find artifacts/ -type f \( -name '*.trx' -o -name '*.snupkg' -o -name '*.nupkg' \) -delete
+
       - name: List artifacts
         run: ls -la artifacts/
 
