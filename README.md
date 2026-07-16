@@ -1,21 +1,17 @@
-<p align="center">
-  <img src="docs/assets/logo.png" alt="WafSight" width="140">
-</p>
-<h1 align="center">WafSight</h1>
-<p align="center">
-  <em>High-performance WAF/CDN detection library and CLI for .NET</em>
-</p>
+![WafSight](docs/assets/logo.png)
 
-<p align="center">
-  <a href="https://www.nuget.org/packages/WafSight"><img src="https://img.shields.io/nuget/v/WafSight?style=flat-square&logo=nuget&label=NuGet" alt="NuGet Version"></a>
-  <a href="https://www.nuget.org/packages/WafSight"><img src="https://img.shields.io/nuget/dt/WafSight?style=flat-square&logo=nuget&label=Downloads" alt="NuGet Downloads"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License"></a>
-  <a href="https://dotnet.microsoft.com"><img src="https://img.shields.io/badge/.NET-8.0-5C2D91?style=flat-square&logo=dotnet" alt=".NET"></a>
-  <a href="https://github.com/rodrigoramosrs/wafsight/actions"><img src="https://img.shields.io/github/actions/workflow/status/rodrigoramosrs/wafsight/ci.yml?style=flat-square&logo=github&label=Build" alt="Build"></a>
-  <a href="https://github.com/rodrigoramosrs/wafsight"><img src="https://img.shields.io/github/stars/rodrigoramosrs/wafsight?style=flat-square&logo=github&label=Stars" alt="Stars"></a>
-  <a href="https://github.com/rodrigoramosrs/wafsight"><img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey?style=flat-square" alt="Platform"></a>
-  <a href="https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot"><img src="https://img.shields.io/badge/AOT-Compatible-success?style=flat-square" alt="AOT"></a>
-</p>
+# WafSight
+
+*High-performance WAF/CDN detection library and CLI for .NET*
+
+[![NuGet Version](https://img.shields.io/nuget/v/WafSight?style=flat-square&logo=nuget&label=NuGet)](https://www.nuget.org/packages/WafSight)
+[![NuGet Downloads](https://img.shields.io/nuget/dt/WafSight?style=flat-square&logo=nuget&label=Downloads)](https://www.nuget.org/packages/WafSight)
+[![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
+[![.NET](https://img.shields.io/badge/.NET-8.0-5C2D91?style=flat-square&logo=dotnet)](https://dotnet.microsoft.com)
+[![Build](https://img.shields.io/github/actions/workflow/status/rodrigoramosrs/wafsight/ci.yml?style=flat-square&logo=github&label=Build)](https://github.com/rodrigoramosrs/wafsight/actions)
+[![Stars](https://img.shields.io/github/stars/rodrigoramosrs/wafsight?style=flat-square&logo=github&label=Stars)](https://github.com/rodrigoramosrs/wafsight)
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey?style=flat-square)](https://github.com/rodrigoramosrs/wafsight)
+[![AOT](https://img.shields.io/badge/AOT-Compatible-success?style=flat-square)](https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot)
 
 ---
 
@@ -141,11 +137,9 @@ public class MyService
 
 ---
 
-<p align="center">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License"> </a>
-  <a href="https://www.nuget.org/packages/WafSight"><img src="https://img.shields.io/nuget/v/WafSight?style=flat-square" alt="NuGet"></a>
-  <a href="https://github.com/rodrigoramosrs/wafsight"><img src="https://img.shields.io/github/stars/rodrigoramosrs/wafsight?style=flat-square&label=Stars" alt="GitHub Stars"></a>
-</p>
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
+[![NuGet](https://img.shields.io/nuget/v/WafSight?style=flat-square)](https://www.nuget.org/packages/WafSight)
+[![GitHub Stars](https://img.shields.io/github/stars/rodrigoramosrs/wafsight?style=flat-square&label=Stars)](https://github.com/rodrigoramosrs/wafsight)
 
 ## Special Thanks
 
