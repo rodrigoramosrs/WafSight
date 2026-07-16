@@ -130,4 +130,109 @@ public class CliIntegrationTests
         output.Should().Contain("F5");
         output.Should().Contain("Total:");
     }
+
+    [Fact]
+    public async Task Verbose_IsCaseInsensitive_Uppercase()
+    {
+        var stdout = Console.Out;
+        using var sw = new StringWriter();
+        Console.SetOut(sw);
+
+        await WafSight.Cli.Program.Main(new[] { "--VERBOSE", "1", "--providers" });
+
+        var output = sw.ToString();
+        Console.SetOut(stdout);
+
+        output.Should().Contain("CloudFlare");
+    }
+
+    [Fact]
+    public async Task Verbose_IsCaseInsensitive_MixedCase()
+    {
+        var stdout = Console.Out;
+        using var sw = new StringWriter();
+        Console.SetOut(sw);
+
+        await WafSight.Cli.Program.Main(new[] { "--Verbose", "1", "--providers" });
+
+        var output = sw.ToString();
+        Console.SetOut(stdout);
+
+        output.Should().Contain("CloudFlare");
+    }
+
+    [Fact]
+    public async Task Verbose_ShortLowerCase_AppliesMaxVerbosity()
+    {
+        var stdout = Console.Out;
+        using var sw = new StringWriter();
+        Console.SetOut(sw);
+
+        await WafSight.Cli.Program.Main(new[] { "-v", "--providers" });
+
+        var output = sw.ToString();
+        Console.SetOut(stdout);
+
+        output.Should().Contain("CloudFlare");
+    }
+
+    [Fact]
+    public async Task Verbose_LongFlagWithoutValue_AppliesMaxVerbosity()
+    {
+        var stdout = Console.Out;
+        using var sw = new StringWriter();
+        Console.SetOut(sw);
+
+        await WafSight.Cli.Program.Main(new[] { "--verbose", "--providers" });
+
+        var output = sw.ToString();
+        Console.SetOut(stdout);
+
+        output.Should().Contain("CloudFlare");
+    }
+
+    [Fact]
+    public async Task Verbose_ShortUpperCaseWithoutValue_AppliesMaxVerbosity()
+    {
+        var stdout = Console.Out;
+        using var sw = new StringWriter();
+        Console.SetOut(sw);
+
+        await WafSight.Cli.Program.Main(new[] { "-V", "--providers" });
+
+        var output = sw.ToString();
+        Console.SetOut(stdout);
+
+        output.Should().Contain("CloudFlare");
+    }
+
+    [Fact]
+    public async Task Version_StillWorks_WithLongFlag()
+    {
+        var stdout = Console.Out;
+        using var sw = new StringWriter();
+        Console.SetOut(sw);
+
+        await WafSight.Cli.Program.Main(new[] { "--version" });
+
+        var output = sw.ToString();
+        Console.SetOut(stdout);
+
+        output.Should().Contain("WafSight CLI v");
+    }
+
+    [Fact]
+    public async Task Version_StillWorks_WithPlainCommand()
+    {
+        var stdout = Console.Out;
+        using var sw = new StringWriter();
+        Console.SetOut(sw);
+
+        await WafSight.Cli.Program.Main(new[] { "version" });
+
+        var output = sw.ToString();
+        Console.SetOut(stdout);
+
+        output.Should().Contain("WafSight CLI v");
+    }
 }
