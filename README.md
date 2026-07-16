@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/logo.png" alt="WafSight" width="140">
+  <img src="docs/assets/logo.png" alt="WafSight" width="140">
 </p>
 <h1 align="center">WafSight</h1>
 <p align="center">
