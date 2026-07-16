@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Logging;
 using WafSight.Models;
 
 namespace WafSight.Providers;
@@ -16,12 +17,20 @@ public class ImpervaProvider : IDetectionProvider
     public int Priority => 75;
     public bool Enabled => true;
 
+    private readonly ILogger<ImpervaProvider>? _logger;
+
+    public ImpervaProvider(ILogger<ImpervaProvider>? logger = null)
+    {
+        _logger = logger;
+    }
+
     private static readonly Regex ImpervaServerPattern = new(@"(?i)incap-s-info|incapsula", RegexOptions.Compiled);
     private static readonly Regex ImpervaCpCaptchaPattern = new(@"(?i)incap_ses|visid_incap|nlb_cpt|incapsula_incapsula", RegexOptions.Compiled);
     private static readonly Regex ImpervaNlbCptPattern = new(@"(?i)nlb_cpt|visid_incap", RegexOptions.Compiled);
 
     public Task<List<Evidence>> DetectAsync(DetectionContext context)
     {
+        _logger?.LogDebug("Starting Imperva detection for {Url}", context.Url);
         var evidence = new List<Evidence>();
 
         if (context.Response is not null)
@@ -29,6 +38,12 @@ public class ImpervaProvider : IDetectionProvider
             evidence.AddRange(CheckHeaders(context.Response));
             evidence.AddRange(CheckCookies(context.Response));
             evidence.AddRange(CheckBody(context.Response));
+            _logger?.LogInformation("Imperva evidence found: {Evidence}", evidence.Count > 0 ? evidence.LastOrDefault()?.Name ?? "unknown" : "none");
+            _logger?.LogDebug("Imperva detection completed: {Count} evidence(s)", evidence.Count);
+        }
+        else
+        {
+            _logger?.LogWarning("No response data for Imperva detection on {Url}", context.Url);
         }
 
         return Task.FromResult(evidence);

@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Logging;
 using WafSight.Models;
 
 namespace WafSight.Providers;
@@ -16,17 +17,31 @@ public class AwsProvider : IDetectionProvider
     public int Priority => 95;
     public bool Enabled => true;
 
+    private readonly ILogger<AwsProvider>? _logger;
+
+    public AwsProvider(ILogger<AwsProvider>? logger = null)
+    {
+        _logger = logger;
+    }
+
     private static readonly Regex CloudFrontIdPattern = new(@"^[A-Za-z0-9]{8}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{12}$", RegexOptions.Compiled);
     private static readonly Regex CloudFrontPopPattern = new(@"^[A-Z]{3}[0-9]+-[A-Z][0-9]+$", RegexOptions.Compiled);
     private static readonly Regex CloudFrontViaPattern = new(@"(?i)(cloudfront|1\.1 [a-f0-9]+ \(CloudFront\))", RegexOptions.Compiled);
 
     public async Task<List<Evidence>> DetectAsync(DetectionContext context)
     {
+        _logger?.LogDebug("Starting AWS detection for {Url}", context.Url);
         var evidence = new List<Evidence>();
 
         if (context.Response is not null)
         {
             evidence.AddRange(await CheckHeaders(context.Response));
+            _logger?.LogInformation("AWS evidence found: {Evidence}", evidence.Count > 0 ? evidence.LastOrDefault()?.Name ?? "unknown" : "none");
+            _logger?.LogDebug("AWS detection completed: {Count} evidence(s)", evidence.Count);
+        }
+        else
+        {
+            _logger?.LogWarning("No response data for AWS detection on {Url}", context.Url);
         }
 
         return evidence;

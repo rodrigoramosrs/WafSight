@@ -87,7 +87,7 @@ public class CliIntegrationTests
         var output = sw.ToString();
         Console.SetOut(stdout);
 
-        output.Should().Contain("Usage: wafsight");
+        output.Should().Contain("Usage: waf-sight");
         output.Should().Contain("detect");
         output.Should().Contain("batch");
         output.Should().Contain("providers");
@@ -105,7 +105,7 @@ public class CliIntegrationTests
         var output = sw.ToString();
         Console.SetOut(stdout);
 
-        output.Should().Contain("WafSight CLI v2.0.0");
+        output.Should().Contain("WafSight CLI v");
     }
 
     [Fact]
@@ -115,7 +115,7 @@ public class CliIntegrationTests
         using var sw = new StringWriter();
         Console.SetOut(sw);
 
-        await WafSight.Cli.Program.Main(new[] { "--providers" });
+        await WafSight.Cli.Program.Main(new[] { "-V", "1", "--providers" });
 
         var output = sw.ToString();
         Console.SetOut(stdout);

@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using WafSight.Analysis;
 using WafSight.Models;
 using WafSight.Providers;
@@ -11,7 +12,14 @@ public class ProviderRegistry
 {
     private readonly Dictionary<string, IDetectionProvider> _providers = new();
     private readonly Dictionary<string, ProviderMetadata> _metadata = new();
-    private readonly EvidenceScorer _scorer = new();
+    private readonly EvidenceScorer _scorer;
+    private readonly ILogger<ProviderRegistry>? _logger;
+
+    public ProviderRegistry(ILogger<ProviderRegistry>? logger = null)
+    {
+        _logger = logger;
+        _scorer = new EvidenceScorer();
+    }
 
     /// <summary>
     /// Registers a new provider
@@ -31,6 +39,9 @@ public class ProviderRegistry
             Enabled = provider.Enabled,
             Priority = provider.Priority
         };
+
+        _logger?.LogInformation("Registered detection provider: {Name} v{Version} (type={Type}, priority={Priority})",
+            provider.Name, provider.Version, provider.ProviderType, provider.Priority);
     }
 
     /// <summary>
@@ -38,6 +49,9 @@ public class ProviderRegistry
     /// </summary>
     public async Task<DetectionResult> DetectAllAsync(DetectionContext context)
     {
+        _logger?.LogInformation("Starting detection for {Url} with {Count} registered provider(s)",
+            context.Url, _providers.Count);
+
         var startTime = DateTime.UtcNow;
         var providerScores = new Dictionary<string, double>();
         var allEvidence = new Dictionary<string, List<Models.Evidence>>();
@@ -53,12 +67,13 @@ public class ProviderRegistry
             {
                 try
                 {
+                    _logger?.LogDebug("Running detection for provider: {Name}", provider.Name);
                     var evidence = await provider.DetectAsync(context);
                     return (provider.Name, evidence, provider.ConfidenceBase);
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Provider '{provider.Name}' failed: {ex.Message}");
+                    _logger?.LogWarning(ex, "Provider '{Name}' detection failed: {Message}", provider.Name, ex.Message);
                     return (provider.Name, new List<Models.Evidence>(), 0.0);
                 }
             });
@@ -72,6 +87,7 @@ public class ProviderRegistry
                 allEvidence[name] = evidence;
                 var score = _scorer.CalculateConfidence(evidence);
                 providerScores[name] = score;
+                _logger?.LogDebug("Provider '{Name}' scored {Score:F3} with {Count} evidence(s)", name, score, evidence.Count);
             }
         }
 
@@ -90,6 +106,12 @@ public class ProviderRegistry
                 caveats.AddRange(_scorer.GenerateCaveats(evidenceList, provider));
             }
         }
+
+        _logger?.LogInformation("Detection completed for {Url}: WAF={Waf}, CDN={Cdn}, time={TimeMs}ms",
+            context.Url,
+            bestWaf?.Name ?? "None",
+            bestCdn?.Name ?? "None",
+            detectionTime);
 
         return new DetectionResult
         {

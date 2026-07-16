@@ -1,96 +1,154 @@
+using System.Diagnostics.CodeAnalysis;
+using Microsoft.Extensions.Logging;
 using WafSight;
-using WafSight.Models;
 
 namespace WafSight.Cli;
 
 public class Program
 {
+    public static Verbosity CurrentVerbosity { get; private set; } = Verbosity.None;
+
+    [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026:UsingMemberWithoutReflectionAnnotation", Justification = "Types are directly referenced")]
+    [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2070:TargetTypeCannotBeNull", Justification = "Types are directly referenced")]
+
     public static async Task Main(string[] args)
     {
-        Console.WriteLine("=== WafSight - WAF/CDN Detector ===\n");
+        CurrentVerbosity = ParseVerbosity(args);
+        
+        var loggerFactory = LoggerFactory.Create(builder =>
+        {
+            builder.SetMinimumLevel(CurrentVerbosity switch
+            {
+                Verbosity.None => LogLevel.None,
+                Verbosity.Low => LogLevel.Warning,
+                Verbosity.Medium => LogLevel.Information,
+                Verbosity.High => LogLevel.Debug,
+                _ => LogLevel.None
+            });
+        });
 
-        if (args.Length == 0)
+        var logger = loggerFactory.CreateLogger<Program>();
+        logger.LogInformation("WafSight CLI v{Version}", typeof(Program).Assembly.GetName().Version);
+
+        var filteredArgs = FilterArgs(args);
+
+        if (filteredArgs.Length == 0)
         {
             PrintUsage();
             return;
         }
 
-        var command = args[0].ToLower();
+        var command = filteredArgs[0].ToLower();
 
         switch (command)
         {
-            case "--detect" or "-d":
-                if (args.Length < 2)
+            case "--detect" or "-d" or "detect":
+                if (filteredArgs.Length < 2)
                 {
-                    Console.WriteLine("Error: URL required. Usage: wafsight detect <url>");
+                    logger.LogError("URL required. Usage: waf-sight detect <url>");
                     return;
                 }
-                await RunDetect(args[1]);
+                await RunDetect(filteredArgs[1], loggerFactory);
                 break;
 
-            case "--batch" or "-b":
-                if (args.Length < 2)
+            case "--batch" or "-b" or "batch":
+                if (filteredArgs.Length < 2)
                 {
-                    Console.WriteLine("Error: URLs file required. Usage: wafsight batch <file>");
+                    logger.LogError("URLs file required. Usage: waf-sight batch <file>");
                     return;
                 }
-                await RunBatch(args[1]);
+                await RunBatch(filteredArgs[1], loggerFactory);
                 break;
 
-            case "--providers" or "-p":
-                ListProviders();
+            case "--providers" or "-p" or "providers":
+                ListProviders(loggerFactory);
                 break;
 
-            case "--version" or "-v":
-                Console.WriteLine("WafSight CLI v2.0.0");
+            case "--version" or "-v" or "version":
+                Console.WriteLine("WafSight CLI v" + typeof(Program).Assembly.GetName().Version);
                 break;
 
-            case "--help" or "-h":
-            case "help":
+            case "--help" or "-h" or "help":
                 PrintUsage();
                 break;
 
             default:
-                Console.WriteLine($"Unknown command: {command}");
+                logger.LogError("Unknown command: {Command}", command);
                 PrintUsage();
                 break;
         }
     }
 
-    private static async Task RunDetect(string url)
+    private static string[] FilterArgs(string[] args)
     {
-        Console.WriteLine($"Scanning: {url}\n");
+        var filtered = new List<string>();
+        for (int i = 0; i < args.Length; i++)
+        {
+            if ((args[i] == "--verbose" || args[i] == "-V") && i + 1 < args.Length)
+            {
+                i++; // skip verbosity value
+                continue;
+            }
+            filtered.Add(args[i]);
+        }
+        return filtered.ToArray();
+    }
 
-        using var client = new WafDetectorClient();
+    private static Verbosity ParseVerbosity(string[] args)
+    {
+        for (int i = 0; i < args.Length; i++)
+        {
+            if (args[i] == "--verbose" || args[i] == "-V")
+            {
+                if (i + 1 < args.Length && int.TryParse(args[i + 1], out int level) && level >= 0 && level <= 3)
+                {
+                    return (Verbosity)level;
+                }
+                return Verbosity.High;
+            }
+        }
+        return Verbosity.None;
+    }
+
+    private static async Task RunDetect(string url, ILoggerFactory loggerFactory)
+    {
+        var logger = loggerFactory.CreateLogger<WafDetectorClient>();
+        logger.LogInformation("Starting detection for: {Url}", url);
+
+        using var client = new WafDetectorClient(loggerFactory);
 
         var result = await client.DetectAsync(url);
 
         Console.WriteLine(result.ToSummary());
 
-        if (result.ProviderScores.Count > 0)
+        if (CurrentVerbosity >= Verbosity.Medium && result.ProviderScores.Count > 0)
         {
             Console.WriteLine("\nProvider Scores:");
             foreach (var (name, score) in result.ProviderScores.OrderByDescending(s => s.Value))
             {
-                Console.WriteLine($"  {name,-20} {score:P0}");
+                Console.WriteLine("  " + name.PadRight(20) + score.ToString("P0"));
             }
         }
 
-        if (result.Evidence.Count > 0)
+        if (CurrentVerbosity >= Verbosity.High && result.Evidence.Count > 0)
         {
             Console.WriteLine("\nEvidence:");
             foreach (var evidence in result.Evidence)
             {
-                Console.WriteLine($"  [{evidence.Method}] {evidence.Name} = {evidence.Value} ({evidence.Confidence:P0})");
+                Console.WriteLine("  [" + evidence.Method + "] " + evidence.Name + " = " + evidence.Value + " (" + evidence.Confidence.ToString("P0") + ")");
             }
         }
+
+        logger.LogInformation("Detection completed for: {Url}, Found: {Found}", url, result.HasWaf || result.HasCdn);
     }
 
-    private static async Task RunBatch(string filePath)
+    private static async Task RunBatch(string filePath, ILoggerFactory loggerFactory)
     {
+        var logger = loggerFactory.CreateLogger<Program>();
+        
         if (!File.Exists(filePath))
         {
-            Console.WriteLine($"Error: File not found: {filePath}");
+            logger.LogError("File not found: {FilePath}", filePath);
             return;
         }
 
@@ -99,46 +157,63 @@ public class Program
 
         if (urls.Length == 0)
         {
-            Console.WriteLine("No URLs found in file.");
+            logger.LogWarning("No URLs found in file: {FilePath}", filePath);
             return;
         }
 
-        Console.WriteLine($"Batch scanning {urls.Length} URLs...\n");
+        logger.LogInformation("Starting batch scan of {Count} URLs from: {File}", urls.Length, filePath);
 
-        using var client = new WafDetectorClient();
+        using var client = new WafDetectorClient(loggerFactory);
 
         var results = await client.DetectBatchAsync(urls, maxConcurrency: 5);
 
-        Console.WriteLine($"{"URL",-45} {"WAF",-15} {"CDN",-15} {"Time",8}");
-        Console.WriteLine(new string('-', 90));
-
-        foreach (var (url, result) in results)
+        if (CurrentVerbosity >= Verbosity.Low)
         {
-            var wafName = result.HasWaf ? result.Waf!.Name : "-";
-            var cdnName = result.HasCdn ? result.Cdn!.Name : "-";
-            Console.WriteLine($"{url,-45} {wafName,-15} {cdnName,-15} {result.DetectionTimeMs,7}ms");
+            Console.WriteLine("URL".PadRight(45) + " WAF".PadRight(15) + " CDN".PadRight(15) + " Time".PadLeft(8));
+            Console.WriteLine(new string('-', 90));
+
+            foreach (var (url, result) in results)
+            {
+                var wafName = result.HasWaf ? result.Waf!.Name : "-";
+                var cdnName = result.HasCdn ? result.Cdn!.Name : "-";
+                Console.WriteLine(url.PadRight(45) + wafName.PadRight(15) + cdnName.PadRight(15) + result.DetectionTimeMs.ToString().PadLeft(8) + "ms");
+            }
         }
+
+        logger.LogInformation("Batch scan completed. Total: {Total}, Found WAF: {WafCount}, Found CDN: {CdnCount}",
+            results.Count(), results.Count(r => r.Value.HasWaf), results.Count(r => r.Value.HasCdn));
     }
 
-    private static void ListProviders()
+    private static void ListProviders(ILoggerFactory loggerFactory)
     {
-        using var client = new WafDetectorClient();
+        var logger = loggerFactory.CreateLogger<Program>();
+        logger.LogInformation("Listing registered providers");
 
-        Console.WriteLine("Registered Providers:\n");
-        Console.WriteLine($"{"Name",-15} {"Type",-10} {"Priority",-10} {"Description",40}");
-        Console.WriteLine(new string('-', 80));
+        using var client = new WafDetectorClient(loggerFactory);
 
-        foreach (var provider in client.ListProviders())
+        if (CurrentVerbosity >= Verbosity.Low)
         {
-            Console.WriteLine($"{provider.Name,-15} {(int)provider.ProviderType,-10} {provider.Priority,-10} {provider.Description,40}");
+            Console.WriteLine("Registered Providers:\n");
+            Console.WriteLine("Name".PadRight(15) + " Type".PadRight(10) + " Priority".PadRight(10) + " Description".PadRight(40));
+            Console.WriteLine(new string('-', 80));
+
+            foreach (var provider in client.ListProviders())
+            {
+                Console.WriteLine(provider.Name.PadRight(15) + ((int)provider.ProviderType).ToString().PadRight(10) + provider.Priority.ToString().PadRight(10) + provider.Description.PadRight(40));
+            }
         }
 
-        Console.WriteLine($"\nTotal: {client.GetProviderCount()} providers");
+        Console.WriteLine("\nTotal: " + client.GetProviderCount() + " providers");
+        logger.LogDebug("Provider count: {Count}", client.GetProviderCount());
     }
 
     private static void PrintUsage()
     {
-        Console.WriteLine(@"Usage: wafsight <command> [options]
+        Console.WriteLine(@"Usage: waf-sight [options] <command> [arguments]
+
+Options:
+  --verbose, -V [0-3]       Set verbosity level (0=None, 1=Low, 2=Medium, 3=High)
+                            Default: 0 (None)
 
 Commands:
   detect, -d <url>          Detect WAF/CDN for a single URL
@@ -147,9 +222,17 @@ Commands:
   version,  -v              Show version
   help,     -h              Show this help
 
+Verbosity Levels:
+  0 (None)   - Only errors and critical information
+  1 (Low)    - Errors + basic status (detection results)
+  2 (Medium) - Low + headers, DNS records, provider scores
+  3 (High)   - Medium + payload probing, evidence details, timing
+
 Examples:
-  wafsight detect https://example.com
-  wafsight batch urls.txt
-  wafsight providers");
+  waf-sight detect https://example.com
+  waf-sight --verbose 2 detect https://example.com
+  waf-sight -V 3 detect https://example.com
+  waf-sight batch urls.txt
+  waf-sight providers");
     }
 }

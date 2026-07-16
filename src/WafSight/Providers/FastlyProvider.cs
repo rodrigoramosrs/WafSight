@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Logging;
 using WafSight.Models;
 
 namespace WafSight.Providers;
@@ -16,17 +17,31 @@ public class FastlyProvider : IDetectionProvider
     public int Priority => 85;
     public bool Enabled => true;
 
+    private readonly ILogger<FastlyProvider>? _logger;
+
+    public FastlyProvider(ILogger<FastlyProvider>? logger = null)
+    {
+        _logger = logger;
+    }
+
     private static readonly Regex FastlyServerPattern = new(@"(?i)fastly", RegexOptions.Compiled);
     private static readonly Regex FastlyTiePattern = new(@"(?i)x-tie", RegexOptions.Compiled);
     private static readonly Regex FastlySurrogateKeyPattern = new(@"(?i)x-surrogate-key", RegexOptions.Compiled);
 
     public async Task<List<Evidence>> DetectAsync(DetectionContext context)
     {
+        _logger?.LogDebug("Starting Fastly detection for {Url}", context.Url);
         var evidence = new List<Evidence>();
 
         if (context.Response is not null)
         {
             evidence.AddRange(await CheckHeaders(context.Response));
+            _logger?.LogInformation("Fastly evidence found: {Evidence}", evidence.Count > 0 ? evidence.LastOrDefault()?.Name ?? "unknown" : "none");
+            _logger?.LogDebug("Fastly detection completed: {Count} evidence(s)", evidence.Count);
+        }
+        else
+        {
+            _logger?.LogWarning("No response data for Fastly detection on {Url}", context.Url);
         }
 
         return evidence;

@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Logging;
 using WafSight.Models;
 
 namespace WafSight.Providers;
@@ -16,6 +17,13 @@ public class AzureProvider : IDetectionProvider
     public int Priority => 80;
     public bool Enabled => true;
 
+    private readonly ILogger<AzureProvider>? _logger;
+
+    public AzureProvider(ILogger<AzureProvider>? logger = null)
+    {
+        _logger = logger;
+    }
+
     private static readonly Regex AzurePmoPattern = new(@"^AzurePmo", RegexOptions.Compiled);
     private static readonly Regex AzureFrontDoorPattern = new(@"(?i)azure[-_]front[-_]door", RegexOptions.Compiled);
     private static readonly Regex AzureApplicationGatewayPattern = new(@"(?i)application[-_]gateway", RegexOptions.Compiled);
@@ -25,11 +33,18 @@ public class AzureProvider : IDetectionProvider
 
     public async Task<List<Evidence>> DetectAsync(DetectionContext context)
     {
+        _logger?.LogDebug("Starting Azure detection for {Url}", context.Url);
         var evidence = new List<Evidence>();
 
         if (context.Response is not null)
         {
             evidence.AddRange(await CheckHeaders(context.Response));
+            _logger?.LogInformation("Azure evidence found: {Evidence}", evidence.Count > 0 ? evidence.LastOrDefault()?.Name ?? "unknown" : "none");
+            _logger?.LogDebug("Azure detection completed: {Count} evidence(s)", evidence.Count);
+        }
+        else
+        {
+            _logger?.LogWarning("No response data for Azure detection on {Url}", context.Url);
         }
 
         return evidence;

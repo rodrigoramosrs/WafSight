@@ -1,0 +1,266 @@
+name: Build, Test & Release
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+  packages: write
+  actions: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+env:
+  DOTNET_VERSION: '8.0.x'
+  CONFIGURATION: Release
+
+jobs:
+  calculate-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Calculate version
+        id: version
+        run: |
+          YEAR=$(date +%Y)
+          MONTH=$(date -u +%-m)
+
+          EXISTING=$(gh release list --limit 100 --json tagName |
+            jq -r '.[] | select(.tagName | test("^'"$YEAR".'"$MONTH"'.\\d+\\.\\d+$")) | .tagName' |
+            sort -V | tail -1)
+
+          if [ -z "$EXISTING" ]; then
+            MINOR=1
+          else
+            PREVIOUS_MINOR=$(echo "$EXISTING" | awk -F. '{print $4}')
+            MINOR=$((PREVIOUS_MINOR + 1))
+          fi
+
+          VERSION="$YEAR.$MONTH.0.$MINOR"
+          echo "Computed version: $VERSION"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+  build-and-test:
+    needs: calculate-version
+    runs-on: windows-latest
+    outputs:
+      version: ${{ needs.calculate-version.outputs.version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --configuration ${{ env.CONFIGURATION }} --no-restore -p:Version=${{ needs.calculate-version.outputs.version }}
+
+      - name: Test
+        run: dotnet test --configuration ${{ env.CONFIGURATION }} --no-build --verbosity normal --logger trx --results-directory test-results -p:Version=${{ needs.calculate-version.outputs.version }}
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: test-results/**/*.trx
+
+  publish-nuget:
+    needs: [calculate-version, build-and-test]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: nuget-publish
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Pack NuGet
+        run: dotnet pack src/WafSight/WafSight.csproj --configuration ${{ env.CONFIGURATION }} --no-build -p:Version=${{ needs.calculate-version.outputs.version }} -o nupkg
+
+      - name: List packed files
+        run: ls -la nupkg/
+
+      - name: Publish to NuGet.org
+        run: |
+          dotnet nuget push nupkg/WafSight.${{ needs.calculate-version.outputs.version }}.nupkg \
+            --api-key "${{ secrets.NUGET_API_KEY }}" \
+            --source https://api.nuget.org/v3/index.json \
+            --skip-duplicate
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+
+      - name: Upload nupkg to artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-packages
+          path: nupkg/*.nupkg
+
+  publish-release:
+    needs: [calculate-version, build-and-test]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: github-release
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Publish win-x64
+        run: |
+          dotnet publish src/WafSight.Cli/WafSight.Cli.csproj \
+            -c ${{ env.CONFIGURATION }} \
+            -r win-x64 \
+            -p:Aot=true \
+            -p:StripSymbols=true \
+            -p:IlcFoldIdenticalMethodBodies=true \
+            -p:Version=${{ needs.calculate-version.outputs.version }} \
+            -o publish/win-x64
+
+      - name: Publish linux-x64
+        run: |
+          dotnet publish src/WafSight.Cli/WafSight.Cli.csproj \
+            -c ${{ env.CONFIGURATION }} \
+            -r linux-x64 \
+            -p:Aot=true \
+            -p:StripSymbols=true \
+            -p:IlcFoldIdenticalMethodBodies=true \
+            -p:Version=${{ needs.calculate-version.outputs.version }} \
+            -o publish/linux-x64
+
+      - name: Publish osx-x64
+        run: |
+          dotnet publish src/WafSight.Cli/WafSight.Cli.csproj \
+            -c ${{ env.CONFIGURATION }} \
+            -r osx-x64 \
+            -p:Aot=true \
+            -p:StripSymbols=true \
+            -p:IlcFoldIdenticalMethodBodies=true \
+            -p:Version=${{ needs.calculate-version.outputs.version }} \
+            -o publish/osx-x64
+
+      - name: Publish osx-arm64
+        run: |
+          dotnet publish src/WafSight.Cli/WafSight.Cli.csproj \
+            -c ${{ env.CONFIGURATION }} \
+            -r osx-arm64 \
+            -p:Aot=true \
+            -p:StripSymbols=true \
+            -p:IlcFoldIdenticalMethodBodies=true \
+            -p:Version=${{ needs.calculate-version.outputs.version }} \
+            -o publish/osx-arm64
+
+      - name: Package win-x64
+        run: |
+          cd publish/win-x64
+          zip -r ../../../WafSight-win-x64.zip .
+          cd ../..
+
+      - name: Package linux-x64
+        run: tar -czf WafSight-linux-x64.tar.gz -C publish/linux-x64 .
+
+      - name: Package osx-x64
+        run: tar -czf WafSight-osx-x64.tar.gz -C publish/osx-x64 .
+
+      - name: Package osx-arm64
+        run: tar -czf WafSight-osx-arm64.tar.gz -C publish/osx-arm64 .
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.calculate-version.outputs.version }}
+          name: Release v${{ needs.calculate-version.outputs.version }}
+          body: |
+            ## WafSight v${{ needs.calculate-version.outputs.version }}
+
+            ### Binários disponíveis (AOT Native):
+            - **Windows x64** — `WafSight-win-x64.zip`
+            - **Linux x64** — `WafSight-linux-x64.tar.gz`
+            - **macOS x64** — `WafSight-osx-x64.tar.gz`
+            - **macOS ARM64** — `WafSight-osx-arm64.tar.gz`
+
+            ### Instalação
+            ```bash
+            # Linux / macOS
+            tar -xzf WafSight-linux-x64.tar.gz
+            chmod +x WafSight
+
+            # Uso
+            ./WafSight detect https://example.com
+            ```
+
+            ### NuGet
+            ```bash
+            dotnet add package WafSight --version ${{ needs.calculate-version.outputs.version }}
+            ```
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+          files: |
+            WafSight-win-x64.zip
+            WafSight-linux-x64.tar.gz
+            WafSight-osx-x64.tar.gz
+            WafSight-osx-arm64.tar.gz
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-binaries
+          path: |
+            WafSight-win-x64.zip
+            WafSight-linux-x64.tar.gz
+            WafSight-osx-x64.tar.gz
+            WafSight-osx-arm64.tar.gz

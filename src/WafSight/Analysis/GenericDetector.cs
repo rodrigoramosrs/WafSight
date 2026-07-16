@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using WafSight.Models;
 
 namespace WafSight.Analysis;
@@ -9,6 +10,12 @@ namespace WafSight.Analysis;
 public class GenericDetector
 {
     private readonly EvidenceScorer _scorer = new();
+    private readonly ILogger<GenericDetector>? _logger;
+
+    public GenericDetector(ILogger<GenericDetector>? logger = null)
+    {
+        _logger = logger;
+    }
 
     /// <summary>
     /// Attempts to detect a generic WAF by comparing normal vs attack responses
@@ -20,12 +27,15 @@ public class GenericDetector
         if (context.Response == null)
             return null;
 
+        _logger?.LogInformation("Starting generic WAF detection for {Url}", context.Url);
+
         var evidence = new List<Models.Evidence>();
         var reasons = new List<string>();
 
         var noUaResponse = await RequestWithoutUserAgent(context.Url, requestFunc);
         if (noUaResponse is not null && context.Response.StatusCode != noUaResponse.StatusCode)
         {
+            _logger?.LogInformation("Generic detection: User-Agent difference detected");
             reasons.Add("Server returned a different response when request had no User-Agent");
             evidence.Add(new Models.Evidence
             {
@@ -40,6 +50,7 @@ public class GenericDetector
         var xssResponse = await RequestWithPayload(context.Url, "xss", requestFunc);
         if (xssResponse is not null && context.Response.StatusCode != xssResponse.StatusCode)
         {
+            _logger?.LogInformation("Generic detection: XSS payload blocked");
             reasons.Add("Server returned a different response with XSS payload");
             evidence.Add(new Models.Evidence
             {
@@ -54,6 +65,7 @@ public class GenericDetector
         var sqliResponse = await RequestWithPayload(context.Url, "sqli", requestFunc);
         if (sqliResponse is not null && context.Response.StatusCode != sqliResponse.StatusCode)
         {
+            _logger?.LogInformation("Generic detection: SQLi payload blocked");
             reasons.Add("Server returned a different response with SQLi payload");
             evidence.Add(new Models.Evidence
             {
@@ -68,6 +80,7 @@ public class GenericDetector
         var lfiResponse = await RequestWithPayload(context.Url, "lfi", requestFunc);
         if (lfiResponse is not null && context.Response.StatusCode != lfiResponse.StatusCode)
         {
+            _logger?.LogInformation("Generic detection: LFI payload blocked");
             reasons.Add("Server returned a different response with LFI payload");
             evidence.Add(new Models.Evidence
             {
@@ -83,6 +96,7 @@ public class GenericDetector
             xssResponse?.Headers.TryGetValue("Server", out var attackServer) == true &&
             normalServer != attackServer)
         {
+            _logger?.LogInformation("Generic detection: Server header changed from '{Normal}' to '{Attack}'", normalServer, attackServer);
             reasons.Add($"Server header changed from '{normalServer}' to '{attackServer}'");
             evidence.Add(new Models.Evidence
             {
@@ -96,6 +110,7 @@ public class GenericDetector
 
         if (xssResponse == null && context.Response is not null)
         {
+            _logger?.LogInformation("Generic detection: Connection blocked during attack request");
             reasons.Add("Connection was blocked during attack request");
             evidence.Add(new Models.Evidence
             {
@@ -108,12 +123,21 @@ public class GenericDetector
         }
 
         if (!evidence.Any())
+        {
+            _logger?.LogDebug("Generic detection: No evidence found for {Url}", context.Url);
             return null;
+        }
 
         var confidence = _scorer.CalculateConfidence(evidence);
+        _logger?.LogInformation("Generic detection scoring: {Count} evidence(s), confidence={Confidence}", evidence.Count, confidence);
 
         if (confidence < 0.60)
+        {
+            _logger?.LogDebug("Generic detection: Confidence {Confidence} below threshold for {Url}", confidence, context.Url);
             return null;
+        }
+
+        _logger?.LogInformation("Generic WAF detected for {Url} with confidence {Confidence}", context.Url, confidence);
 
         return new DetectionResult
         {

@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Logging;
 using WafSight.Models;
 
 namespace WafSight.Providers;
@@ -16,12 +17,20 @@ public class SucuriProvider : IDetectionProvider
     public int Priority => 70;
     public bool Enabled => true;
 
+    private readonly ILogger<SucuriProvider>? _logger;
+
+    public SucuriProvider(ILogger<SucuriProvider>? logger = null)
+    {
+        _logger = logger;
+    }
+
     private static readonly Regex SucuriServerPattern = new(@"(?i)sucuri", RegexOptions.Compiled);
     private static readonly Regex SucuriChallengePattern = new(@"(?i)sucuri-cloudproxy|suscher|sucuri-website-firewall", RegexOptions.Compiled);
     private static readonly Regex SucuriNbsPattern = new(@"(?i)x-sucuri-id|x-sucuri-cache", RegexOptions.Compiled);
 
     public Task<List<Evidence>> DetectAsync(DetectionContext context)
     {
+        _logger?.LogDebug("Starting Sucuri detection for {Url}", context.Url);
         var evidence = new List<Evidence>();
 
         if (context.Response is not null)
@@ -29,6 +38,12 @@ public class SucuriProvider : IDetectionProvider
             evidence.AddRange(CheckHeaders(context.Response));
             evidence.AddRange(CheckCookies(context.Response));
             evidence.AddRange(CheckBody(context.Response));
+            _logger?.LogInformation("Sucuri evidence found: {Evidence}", evidence.Count > 0 ? evidence.LastOrDefault()?.Name ?? "unknown" : "none");
+            _logger?.LogDebug("Sucuri detection completed: {Count} evidence(s)", evidence.Count);
+        }
+        else
+        {
+            _logger?.LogWarning("No response data for Sucuri detection on {Url}", context.Url);
         }
 
         return Task.FromResult(evidence);

@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Logging;
 using WafSight.Models;
 
 namespace WafSight.Providers;
@@ -16,6 +17,13 @@ public class AkamaiProvider : IDetectionProvider
     public int Priority => 90;
     public bool Enabled => true;
 
+    private readonly ILogger<AkamaiProvider>? _logger;
+
+    public AkamaiProvider(ILogger<AkamaiProvider>? logger = null)
+    {
+        _logger = logger;
+    }
+
     private static readonly Regex AkamaiServerPattern = new(@"(?i)xakamai-disclose-info", RegexOptions.Compiled);
     private static readonly Regex AkamaiViaPattern = new(@"(?i)akamai-g2(?:\.?)?[a-z]?/?(?:\.?)?[0-9.]*", RegexOptions.Compiled);
     private static readonly Regex AkamaiEdgePattern = new(@"(?i)x-akamai-transformed", RegexOptions.Compiled);
@@ -23,12 +31,19 @@ public class AkamaiProvider : IDetectionProvider
 
     public Task<List<Evidence>> DetectAsync(DetectionContext context)
     {
+        _logger?.LogDebug("Starting Akamai detection for {Url}", context.Url);
         var evidence = new List<Evidence>();
 
         if (context.Response is not null)
         {
             evidence.AddRange(CheckHeaders(context.Response));
             evidence.AddRange(CheckCookies(context.Response));
+            _logger?.LogInformation("Akamai evidence found: {Evidence}", evidence.Count > 0 ? evidence.LastOrDefault()?.Name ?? "unknown" : "none");
+            _logger?.LogDebug("Akamai detection completed: {Count} evidence(s)", evidence.Count);
+        }
+        else
+        {
+            _logger?.LogWarning("No response data for Akamai detection on {Url}", context.Url);
         }
 
         return Task.FromResult(evidence);

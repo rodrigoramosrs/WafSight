@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Logging;
 using WafSight.Models;
 
 namespace WafSight.Providers;
@@ -16,6 +17,13 @@ public class F5Provider : IDetectionProvider
     public int Priority => 65;
     public bool Enabled => true;
 
+    private readonly ILogger<F5Provider>? _logger;
+
+    public F5Provider(ILogger<F5Provider>? logger = null)
+    {
+        _logger = logger;
+    }
+
     private static readonly Regex F5ServerPattern = new(@"(?i)f5 networks|big.?ip", RegexOptions.Compiled);
     private static readonly Regex F5TmCookiePattern = new(@"(?i)f5.?tm.?cookie", RegexOptions.Compiled);
     private static readonly Regex F5BigipPattern = new(@"(?i)x-ultimate-cp-id|x-ultimate-cp-id", RegexOptions.Compiled);
@@ -23,6 +31,7 @@ public class F5Provider : IDetectionProvider
 
     public Task<List<Evidence>> DetectAsync(DetectionContext context)
     {
+        _logger?.LogDebug("Starting F5 detection for {Url}", context.Url);
         var evidence = new List<Evidence>();
 
         if (context.Response is not null)
@@ -30,6 +39,12 @@ public class F5Provider : IDetectionProvider
             evidence.AddRange(CheckHeaders(context.Response));
             evidence.AddRange(CheckCookies(context.Response));
             evidence.AddRange(CheckBody(context.Response));
+            _logger?.LogInformation("F5 evidence found: {Evidence}", evidence.Count > 0 ? evidence.LastOrDefault()?.Name ?? "unknown" : "none");
+            _logger?.LogDebug("F5 detection completed: {Count} evidence(s)", evidence.Count);
+        }
+        else
+        {
+            _logger?.LogWarning("No response data for F5 detection on {Url}", context.Url);
         }
 
         return Task.FromResult(evidence);

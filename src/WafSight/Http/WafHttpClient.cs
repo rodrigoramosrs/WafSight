@@ -76,12 +76,18 @@ public class WafHttpClient : IDisposable
     /// </summary>
     public async Task<HttpResponseData?> GetAsync(string url, CancellationToken cancellationToken = default)
     {
+        _logger?.LogInformation("Sending GET request to {Url}", url);
+
         try
         {
             var sw = Stopwatch.StartNew();
 
             var response = await _resiliencePipeline.ExecuteAsync(
-                async ct => await _httpClient.GetAsync(url, ct),
+                async ct =>
+                {
+                    _logger?.LogDebug("HTTP request in progress: {Url}", url);
+                    return await _httpClient.GetAsync(url, ct);
+                },
                 cancellationToken);
 
             sw.Stop();
@@ -99,9 +105,12 @@ public class WafHttpClient : IDisposable
 
             var body = await response.Content.ReadAsStringAsync(cancellationToken);
 
+            var statusCode = (int)response.StatusCode;
+            _logger?.LogInformation("GET request completed for {Url}: {StatusCode} ({Elapsed})", url, statusCode, sw.Elapsed);
+
             return new HttpResponseData
             {
-                StatusCode = (int)response.StatusCode,
+                StatusCode = statusCode,
                 Headers = headers,
                 Body = body,
                 Url = url,
@@ -123,6 +132,8 @@ public class WafHttpClient : IDisposable
         Dictionary<string, string> headers,
         CancellationToken cancellationToken = default)
     {
+        _logger?.LogInformation("Sending GET request with custom headers to {Url}", url);
+
         try
         {
             var sw = Stopwatch.StartNew();
@@ -134,7 +145,11 @@ public class WafHttpClient : IDisposable
             }
 
             var response = await _resiliencePipeline.ExecuteAsync(
-                async ct => await _httpClient.SendAsync(request, ct),
+                async ct =>
+                {
+                    _logger?.LogDebug("HTTP request with headers in progress: {Url}", url);
+                    return await _httpClient.SendAsync(request, ct);
+                },
                 cancellationToken);
 
             sw.Stop();
@@ -152,9 +167,12 @@ public class WafHttpClient : IDisposable
 
             var body = await response.Content.ReadAsStringAsync(cancellationToken);
 
+            var statusCode = (int)response.StatusCode;
+            _logger?.LogInformation("GET request with headers completed for {Url}: {StatusCode} ({Elapsed})", url, statusCode, sw.Elapsed);
+
             return new HttpResponseData
             {
-                StatusCode = (int)response.StatusCode,
+                StatusCode = statusCode,
                 Headers = responseHeaders,
                 Body = body,
                 Url = url,

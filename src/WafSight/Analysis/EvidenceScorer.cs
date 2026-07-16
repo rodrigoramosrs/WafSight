@@ -1,3 +1,6 @@
+using Microsoft.Extensions.Logging;
+using WafSight.Models;
+
 namespace WafSight.Analysis;
 
 /// <summary>
@@ -17,12 +20,21 @@ public class EvidenceScorer
         { Models.DetectionMethod.Payload, 0.40 }
     };
 
+    private readonly ILogger<EvidenceScorer>? _logger;
+
+    public EvidenceScorer(ILoggerFactory? loggerFactory = null)
+    {
+        _logger = loggerFactory?.CreateLogger<EvidenceScorer>();
+    }
+
     /// <summary>
     /// Calculates confidence score for a set of evidence
     /// </summary>
     public double CalculateConfidence(IEnumerable<Models.Evidence> evidence)
     {
         var evidenceList = evidence.ToList();
+        _logger?.LogDebug("Starting confidence scoring for {Count} evidence item(s)", evidenceList.Count);
+
         if (!evidenceList.Any())
             return 0.0;
 
@@ -36,6 +48,9 @@ public class EvidenceScorer
 
             totalScore += ev.Confidence * evidenceWeight;
             totalWeight += evidenceWeight;
+
+            _logger?.LogDebug("Scoring evidence '{Name}' (method={Method}, confidence={Confidence}, weight={Weight}): weightedScore={Score}",
+                ev.Name, ev.Method, ev.Confidence, evidenceWeight, ev.Confidence * evidenceWeight);
         }
 
         if (totalWeight == 0)
@@ -49,7 +64,10 @@ public class EvidenceScorer
         else if (evidenceCount >= 2)
             score = Math.Min(score * 1.05, 1.0);
 
-        return Math.Clamp(score, 0.0, 1.0);
+        var finalScore = Math.Clamp(score, 0.0, 1.0);
+        _logger?.LogInformation("Confidence score calculated: {Score:F3}", finalScore);
+
+        return finalScore;
     }
 
     /// <summary>
@@ -65,11 +83,23 @@ public class EvidenceScorer
     /// </summary>
     public bool HasTier1Evidence(IEnumerable<Models.Evidence> evidence)
     {
-        return evidence.Any(e =>
-            e.Method == Models.DetectionMethod.Header ||
-            e.Method == Models.DetectionMethod.DNS ||
-            e.Method == Models.DetectionMethod.Certificate ||
-            e.Method == Models.DetectionMethod.Cookie);
+        var tier1Methods = new[]
+        {
+            Models.DetectionMethod.Header,
+            Models.DetectionMethod.DNS,
+            Models.DetectionMethod.Certificate,
+            Models.DetectionMethod.Cookie
+        };
+
+        var tier1Evidence = evidence.Where(e => tier1Methods.Contains(e.Method)).ToList();
+        if (tier1Evidence.Any())
+        {
+            _logger?.LogInformation("Tier 1 evidence detected: {Count} item(s) - {Names}",
+                tier1Evidence.Count,
+                string.Join(", ", tier1Evidence.Select(e => e.Name)));
+        }
+
+        return tier1Evidence.Any();
     }
 
     /// <summary>

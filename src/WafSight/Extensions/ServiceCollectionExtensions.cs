@@ -21,8 +21,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton(options);
         services.AddSingleton<IWafDetector>(sp =>
         {
-            var logger = sp.GetService<ILogger<WafDetectorClient>>();
-            return new WafDetectorClient(logger, options.Timeout);
+            var loggerFactory = sp.GetService<ILoggerFactory>();
+            return new WafDetectorClient(loggerFactory, options.Timeout);
         });
 
         return services;
