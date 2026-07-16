@@ -5,11 +5,14 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
-    <AssemblyName>WafSight.Cli</AssemblyName>
+
+
     <RootNamespace>WafSight</RootNamespace>
     <PackageId>WafSight.Cli</PackageId>
     <RuntimeIdentifiers>win-x64;linux-x64;osx-x64;osx-arm64</RuntimeIdentifiers>
     <PublishAot>true</PublishAot>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
     <StripSymbols>true</StripSymbols>
     <ApplicationIcon>logo.ico</ApplicationIcon>
   </PropertyGroup>
