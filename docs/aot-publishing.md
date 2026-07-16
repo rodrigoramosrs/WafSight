@@ -23,7 +23,7 @@ AOT (Ahead-of-Time) compilation transforms .NET assemblies into native executabl
 ### Windows x64
 
 ```bash
-dotnet publish src/WafSight.Cli/WafSight.Cli.csproj \
+dotnet publish src/WafSight/WafSight.csproj \
   -c Release \
   -r win-x64 \
   -p:Aot=true \
@@ -33,12 +33,12 @@ dotnet publish src/WafSight.Cli/WafSight.Cli.csproj \
   -o publish/win-x64
 ```
 
-**Output:** `publish/win-x64/WafSightCli.exe` (~8-10 MB)
+**Output:** `publish/win-x64/WafSight.exe` (~8-10 MB)
 
 ### Linux x64
 
 ```bash
-dotnet publish src/WafSight.Cli/WafSight.Cli.csproj \
+dotnet publish src/WafSight/WafSight.csproj \
   -c Release \
   -r linux-x64 \
   -p:Aot=true \
@@ -47,12 +47,12 @@ dotnet publish src/WafSight.Cli/WafSight.Cli.csproj \
   -o publish/linux-x64
 ```
 
-**Output:** `publish/linux-x64/WafSightCli` (~5-8 MB)
+**Output:** `publish/linux-x64/WafSight` (~5-8 MB)
 
 ### macOS x64
 
 ```bash
-dotnet publish src/WafSight.Cli/WafSight.Cli.csproj \
+dotnet publish src/WafSight/WafSight.csproj \
   -c Release \
   -r osx-x64 \
   -p:Aot=true \
@@ -61,12 +61,12 @@ dotnet publish src/WafSight.Cli/WafSight.Cli.csproj \
   -o publish/osx-x64
 ```
 
-**Output:** `publish/osx-x64/WafSightCli` (~5-8 MB)
+**Output:** `publish/osx-x64/WafSight` (~5-8 MB)
 
 ### macOS ARM64 (Apple Silicon)
 
 ```bash
-dotnet publish src/WafSight.Cli/WafSight.Cli.csproj \
+dotnet publish src/WafSight/WafSight.csproj \
   -c Release \
   -r osx-arm64 \
   -p:Aot=true \
@@ -75,7 +75,7 @@ dotnet publish src/WafSight.Cli/WafSight.Cli.csproj \
   -o publish/osx-arm64
 ```
 
-**Output:** `publish/osx-arm64/WafSightCli` (~5-8 MB)
+**Output:** `publish/osx-arm64/WafSight` (~5-8 MB)
 
 ## Publish Flags Explained
 
@@ -132,7 +132,7 @@ jobs:
       
       - name: Publish
         run: |
-          dotnet publish src/WafSight.Cli/WafSight.Cli.csproj \
+          dotnet publish src/WafSight/WafSight.csproj \
             -c Release \
             -r ${{ matrix.runtime }} \
             -p:Aot=true
@@ -143,16 +143,16 @@ jobs:
 ### Windows
 
 ```powershell
-.\publish\win-x64\WafSightCli.exe --help
-.\publish\win-x64\WafSightCli.exe detect https://example.com
+.\publish\win-x64\WafSight.exe --help
+.\publish\win-x64\WafSight.exe detect https://example.com
 ```
 
 ### Linux/macOS
 
 ```bash
-chmod +x publish/linux-x64/WafSightCli
-./publish/linux-x64/WafSightCli --help
-./publish/linux-x64/WafSightCli detect https://example.com
+chmod +x publish/linux-x64/WafSight
+./publish/linux-x64/WafSight --help
+./publish/linux-x64/WafSight detect https://example.com
 ```
 
 ## Troubleshooting

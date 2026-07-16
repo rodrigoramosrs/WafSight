@@ -25,7 +25,7 @@ WafSight CLI is published as AOT native executables for multiple platforms:
 **On Windows:**
 ```bash
 # Windows only (cross-platform AOT not supported)
-dotnet publish src/WafSight.Cli/WafSight.Cli.csproj \
+dotnet publish src/WafSight/WafSight.csproj \
   -c Release \
   -r win-x64 \
   -p:Aot=true \
@@ -37,7 +37,7 @@ dotnet publish src/WafSight.Cli/WafSight.Cli.csproj \
 **On Linux:**
 ```bash
 # Linux only
-dotnet publish src/WafSight.Cli/WafSight.Cli.csproj \
+dotnet publish src/WafSight/WafSight.csproj \
   -c Release \
   -r linux-x64 \
   -p:Aot=true \
@@ -49,12 +49,12 @@ dotnet publish src/WafSight.Cli/WafSight.Cli.csproj \
 **On macOS:**
 ```bash
 # macOS Intel and ARM
-dotnet publish src/WafSight.Cli/WafSight.Cli.csproj \
+dotnet publish src/WafSight/WafSight.csproj \
   -c Release -r osx-x64 \
   -p:Aot=true -p:PublishSingleFile=true -p:StripSymbols=true \
   -o publish/osx-x64
 
-dotnet publish src/WafSight.Cli/WafSight.Cli.csproj \
+dotnet publish src/WafSight/WafSight.csproj \
   -c Release -r osx-arm64 \
   -p:Aot=true -p:PublishSingleFile=true -p:StripSymbols=true \
   -o publish/osx-arm64
@@ -84,7 +84,7 @@ jobs:
       
       - name: Publish ${{ matrix.runtime }}
         run: |
-          dotnet publish src/WafSight.Cli/WafSight.Cli.csproj \
+          dotnet publish src/WafSight/WafSight.csproj \
             -c Release \
             -r ${{ matrix.runtime }} \
             -p:Aot=true \

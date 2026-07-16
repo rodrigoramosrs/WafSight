@@ -5,8 +5,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
-    <AssemblyName>WafSightCli</AssemblyName>
-    <RootNamespace>WafSight.Cli</RootNamespace>
+    <AssemblyName>WafSight.Cli</AssemblyName>
+    <RootNamespace>WafSight</RootNamespace>
+    <PackageId>WafSight.Cli</PackageId>
     <RuntimeIdentifiers>win-x64;linux-x64;osx-x64;osx-arm64</RuntimeIdentifiers>
     <PublishAot>true</PublishAot>
     <StripSymbols>true</StripSymbols>

@@ -12,7 +12,7 @@ This guide will walk you through your first steps with WafSight, from installati
 ### Step 1: Install the CLI
 
 ```bash
-dotnet tool install --global WafSight.Cli
+dotnet tool install --global WafSight
 ```
 
 ### Step 2: Run Your First Detection
@@ -212,7 +212,7 @@ Note: Package name is `WafSight`, not `WafSight`
 
 **Issue**: CLI not recognized
 ```bash
-dotnet tool install --global WafSight.Cli
+dotnet tool install --global WafSight
 ```
 
 **Issue**: Slow detections

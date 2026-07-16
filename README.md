@@ -42,7 +42,7 @@ WafSight/
 ├── .github/workflows/  # CI/CD automation
 ├── src/
 │   ├── WafSight/              # Core library (DLL)
-│   ├── WafSight.Cli/          # CLI tool (AOT native)
+│   ├── WafSight/              # Core library + CLI (AOT native)
 │   └── WafSight.Tests/        # Unit tests (xUnit)
 ├── Directory.Build.props      # Shared MSBuild properties
 ├── nuget.config               # NuGet configuration

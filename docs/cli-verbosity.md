@@ -48,7 +48,7 @@ WafSight -V 1 detect <url>
 
 **Output:**
 ```
-info: WafSight.Cli.Program[0]
+info: WafSight.Program[0]
       WafSight CLI v2026.7.0.1
 info: WafSight.WafDetectorClient[0]
       Starting detection for: example.com
@@ -82,7 +82,7 @@ WafSight -V 2 detect <url>
 
 **Output:**
 ```
-info: WafSight.Cli.Program[0]
+info: WafSight.Program[0]
       WafSight CLI v2026.7.0.1
 info: WafSight.WafDetectorClient[0]
       Starting detection for: cloudflare.com
@@ -132,7 +132,7 @@ WafSight -V 3 detect <url>
 
 **Output:**
 ```
-info: WafSight.Cli.Program[0]
+info: WafSight.Program[0]
       WafSight CLI v2026.7.0.1
 dbug: WafSight.WafDetectorClient[0]
       Starting detection for: cloudflare.com

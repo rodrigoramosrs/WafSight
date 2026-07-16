@@ -2,7 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using WafSight;
 
-namespace WafSight.Cli;
+namespace WafSight;
 
 public class Program
 {

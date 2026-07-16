@@ -42,7 +42,7 @@ Add to your project file:
 
 Install WafSight as a global .NET tool:
 ```bash
-dotnet tool install --global WafSight.Cli
+dotnet tool install --global WafSight
 ```
 
 After installation, use `WafSight` from anywhere:

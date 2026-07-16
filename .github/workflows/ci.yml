@@ -163,7 +163,7 @@ jobs:
 
       - name: Publish win-x64
         run: |
-          dotnet publish src/WafSight.Cli/WafSight.Cli.csproj \
+          dotnet publish src/WafSight/WafSight.csproj \
             -c ${{ env.CONFIGURATION }} \
             -r win-x64 \
             -p:Aot=true \
@@ -174,7 +174,7 @@ jobs:
 
       - name: Publish linux-x64
         run: |
-          dotnet publish src/WafSight.Cli/WafSight.Cli.csproj \
+          dotnet publish src/WafSight/WafSight.csproj \
             -c ${{ env.CONFIGURATION }} \
             -r linux-x64 \
             -p:Aot=true \
@@ -185,7 +185,7 @@ jobs:
 
       - name: Publish osx-x64
         run: |
-          dotnet publish src/WafSight.Cli/WafSight.Cli.csproj \
+          dotnet publish src/WafSight/WafSight.csproj \
             -c ${{ env.CONFIGURATION }} \
             -r osx-x64 \
             -p:Aot=true \
@@ -196,7 +196,7 @@ jobs:
 
       - name: Publish osx-arm64
         run: |
-          dotnet publish src/WafSight.Cli/WafSight.Cli.csproj \
+          dotnet publish src/WafSight/WafSight.csproj \
             -c ${{ env.CONFIGURATION }} \
             -r osx-arm64 \
             -p:Aot=true \

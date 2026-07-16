@@ -82,7 +82,7 @@ public class CliIntegrationTests
         using var sw = new StringWriter();
         Console.SetOut(sw);
 
-        await WafSight.Cli.Program.Main(Array.Empty<string>());
+        await WafSight.Program.Main(Array.Empty<string>());
 
         var output = sw.ToString();
         Console.SetOut(stdout);
@@ -100,7 +100,7 @@ public class CliIntegrationTests
         using var sw = new StringWriter();
         Console.SetOut(sw);
 
-        await WafSight.Cli.Program.Main(new[] { "--version" });
+        await WafSight.Program.Main(new[] { "--version" });
 
         var output = sw.ToString();
         Console.SetOut(stdout);
@@ -115,7 +115,7 @@ public class CliIntegrationTests
         using var sw = new StringWriter();
         Console.SetOut(sw);
 
-        await WafSight.Cli.Program.Main(new[] { "-V", "1", "--providers" });
+        await WafSight.Program.Main(new[] { "-V", "1", "--providers" });
 
         var output = sw.ToString();
         Console.SetOut(stdout);
@@ -138,7 +138,7 @@ public class CliIntegrationTests
         using var sw = new StringWriter();
         Console.SetOut(sw);
 
-        await WafSight.Cli.Program.Main(new[] { "--VERBOSE", "1", "--providers" });
+        await WafSight.Program.Main(new[] { "--VERBOSE", "1", "--providers" });
 
         var output = sw.ToString();
         Console.SetOut(stdout);
@@ -153,7 +153,7 @@ public class CliIntegrationTests
         using var sw = new StringWriter();
         Console.SetOut(sw);
 
-        await WafSight.Cli.Program.Main(new[] { "--Verbose", "1", "--providers" });
+        await WafSight.Program.Main(new[] { "--Verbose", "1", "--providers" });
 
         var output = sw.ToString();
         Console.SetOut(stdout);
@@ -168,7 +168,7 @@ public class CliIntegrationTests
         using var sw = new StringWriter();
         Console.SetOut(sw);
 
-        await WafSight.Cli.Program.Main(new[] { "-v", "--providers" });
+        await WafSight.Program.Main(new[] { "-v", "--providers" });
 
         var output = sw.ToString();
         Console.SetOut(stdout);
@@ -183,7 +183,7 @@ public class CliIntegrationTests
         using var sw = new StringWriter();
         Console.SetOut(sw);
 
-        await WafSight.Cli.Program.Main(new[] { "--verbose", "--providers" });
+        await WafSight.Program.Main(new[] { "--verbose", "--providers" });
 
         var output = sw.ToString();
         Console.SetOut(stdout);
@@ -198,7 +198,7 @@ public class CliIntegrationTests
         using var sw = new StringWriter();
         Console.SetOut(sw);
 
-        await WafSight.Cli.Program.Main(new[] { "-V", "--providers" });
+        await WafSight.Program.Main(new[] { "-V", "--providers" });
 
         var output = sw.ToString();
         Console.SetOut(stdout);
@@ -213,7 +213,7 @@ public class CliIntegrationTests
         using var sw = new StringWriter();
         Console.SetOut(sw);
 
-        await WafSight.Cli.Program.Main(new[] { "--version" });
+        await WafSight.Program.Main(new[] { "--version" });
 
         var output = sw.ToString();
         Console.SetOut(stdout);
@@ -228,7 +228,7 @@ public class CliIntegrationTests
         using var sw = new StringWriter();
         Console.SetOut(sw);
 
-        await WafSight.Cli.Program.Main(new[] { "version" });
+        await WafSight.Program.Main(new[] { "version" });
 
         var output = sw.ToString();
         Console.SetOut(stdout);

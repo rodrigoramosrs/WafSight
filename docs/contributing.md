@@ -70,7 +70,7 @@ WafSight/
 │   │   ├── Models/            # Data models
 │   │   ├── Providers/         # Detection providers
 │   │   └── Registry/          # Provider registry
-│   ├── WafSight.Cli/          # CLI tool
+│   ├── WafSight/              # Core library + CLI tool
 │   └── WafSight.Tests/        # Unit tests
 ├── docs/                      # Documentation
 ├── assets/                    # Images and assets
@@ -80,7 +80,7 @@ WafSight/
 ### Key Files
 
 - `src/WafSight/WafSight.csproj` - Library project
-- `src/WafSight.Cli/WafSight.Cli.csproj` - CLI project
+- `src/WafSight/WafSight.csproj` - Core library + CLI
 - `src/WafSight.Tests/WafSight.Tests.csproj` - Test project
 - `.github/workflows/ci.yml` - CI/CD workflow
 - `README.md` - Project README
@@ -150,10 +150,10 @@ dotnet test -c Release --logger "trx;LogFileName=test-results.trx"
 
 ```bash
 # Build CLI
-dotnet build src/WafSight.Cli/WafSight.Cli.csproj -c Release
+dotnet build src/WafSight/WafSight.csproj -c Release
 
 # Run CLI
-.\src\WafSight.Cli\bin\Release\net10.0\waf-sight.exe --help
+.\src\WafSight\bin\Release\net10.0\WafSight.exe --help
 ```
 
 ## Pull Requests

@@ -14,10 +14,10 @@ Common issues and solutions for WafSight.
 **Solution:**
 ```bash
 # Install global tool
-dotnet tool install --global WafSight.Cli
+dotnet tool install --global WafSight
 
 # Or use full path
-.\src\WafSight.Cli\bin\Debug\net10.0\waf-sight.exe
+.\src\WafSight\bin\Debug\net10.0\WafSight.exe
 ```
 
 ### No Output

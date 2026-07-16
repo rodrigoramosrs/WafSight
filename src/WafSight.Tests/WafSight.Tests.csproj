@@ -18,7 +18,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\WafSight\WafSight.csproj" />
     <ProjectReference Include="..\WafSight.Cli\WafSight.Cli.csproj" />
   </ItemGroup>
 
