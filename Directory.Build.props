@@ -1,8 +1,8 @@
 <Project>
   <PropertyGroup>
     <RepositoryType>git</RepositoryType>
-    <RepositoryUrl>https://github.com/yourusername/waf-sight</RepositoryUrl>
-    <PackageProjectUrl>https://github.com/yourusername/waf-sight</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/rodrigoramosrs/wafsight</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/rodrigoramosrs/wafsight</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>

@@ -45,7 +45,7 @@ public class Program
             case "--detect" or "-d" or "detect":
                 if (filteredArgs.Length < 2)
                 {
-                    logger.LogError("URL required. Usage: waf-sight detect <url>");
+                    logger.LogError("URL required. Usage: WafSight detect <url>");
                     return;
                 }
                 await RunDetect(filteredArgs[1], loggerFactory);
@@ -54,7 +54,7 @@ public class Program
             case "--batch" or "-b" or "batch":
                 if (filteredArgs.Length < 2)
                 {
-                    logger.LogError("URLs file required. Usage: waf-sight batch <file>");
+                    logger.LogError("URLs file required. Usage: WafSight batch <file>");
                     return;
                 }
                 await RunBatch(filteredArgs[1], loggerFactory);
@@ -209,7 +209,7 @@ public class Program
 
     private static void PrintUsage()
     {
-        Console.WriteLine(@"Usage: waf-sight [options] <command> [arguments]
+        Console.WriteLine(@"Usage: WafSight [options] <command> [arguments]
 
 Options:
   --verbose, -V [0-3]       Set verbosity level (0=None, 1=Low, 2=Medium, 3=High)
@@ -229,10 +229,10 @@ Verbosity Levels:
   3 (High)   - Medium + payload probing, evidence details, timing
 
 Examples:
-  waf-sight detect https://example.com
-  waf-sight --verbose 2 detect https://example.com
-  waf-sight -V 3 detect https://example.com
-  waf-sight batch urls.txt
-  waf-sight providers");
+  WafSight detect https://example.com
+  WafSight --verbose 2 detect https://example.com
+  WafSight -V 3 detect https://example.com
+  WafSight batch urls.txt
+  WafSight providers");
     }
 }

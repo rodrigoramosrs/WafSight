@@ -87,7 +87,7 @@ public class CliIntegrationTests
         var output = sw.ToString();
         Console.SetOut(stdout);
 
-        output.Should().Contain("Usage: waf-sight");
+        output.Should().Contain("Usage: WafSight");
         output.Should().Contain("detect");
         output.Should().Contain("batch");
         output.Should().Contain("providers");
