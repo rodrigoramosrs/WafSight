@@ -373,4 +373,4 @@ FodyWeavers.xsd
 /src/PentestAgent/_outputs
 /tasks/_outputs
 /.playwright-mcp
-src/src/WafSight.Cli/Properties/launchSettings.json
+src/WafSight.Cli/Properties/launchSettings.json

@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "WafSight.Cli": {
-      "commandName": "Project",
-      "commandLineArgs": "-d \"https://hplataformalogistica.grupoboticario.com.br/\""
-    }
-  }
-}
