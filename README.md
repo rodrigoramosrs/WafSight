@@ -265,7 +265,7 @@ Automated workflow on push to `main`:
 ---
 
 <p align="center">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License"> </a>
   <a href="https://www.nuget.org/packages/WafSight"><img src="https://img.shields.io/nuget/v/WafSight?style=flat-square" alt="NuGet"></a>
   <a href="https://github.com/rodrigoramosrs/wafsight"><img src="https://img.shields.io/github/stars/rodrigoramosrs/wafsight?style=flat-square&label=Stars" alt="GitHub Stars"></a>
 </p>
