@@ -111,7 +111,7 @@ Show version information.
 WafSight version
 ```
 
-**Aliases:** `-v`
+**Aliases:** `--version`
 
 **Output:**
 ```
@@ -133,14 +133,15 @@ WafSight help
 Usage: WafSight [options] <command> [arguments]
 
 Options:
-  --verbose, -V [0-3]       Set verbosity level (0=None, 1=Low, 2=Medium, 3=High)
-                            Default: 0 (None)
+  --verbose, -v, -V [0-3]  Set verbosity level (0=None, 1=Low, 2=Medium, 3=High)
+                           Without a value defaults to 3 (High)
+                           Default: 0 (None)
 
 Commands:
   detect, -d <url>          Detect WAF/CDN for a single URL
   batch,   -b <file>        Detect WAF/CDN for URLs in a file (one per line)
   providers, -p             List all registered providers
-  version,  -v              Show version
+  version                   Show version
   help,     -h              Show this help
 
 Verbosity Levels:
@@ -158,14 +159,17 @@ Examples:
 
 ## Options
 
-### --verbose, -V
+### --verbose, -v, -V
 
-Set verbosity level for logging output.
+Set verbosity level for logging output. Case-insensitive.
 
 **Syntax:**
 ```bash
+WafSight -v <level> <command> [args]
 WafSight -V <level> <command> [args]
 WafSight --verbose <level> <command> [args]
+WafSight -v <command> [args]          # Defaults to level 3 (High)
+WafSight --verbose <command> [args]   # Defaults to level 3 (High)
 ```
 
 **Levels:**
@@ -190,6 +194,10 @@ WafSight -V 2 detect https://example.com
 
 # Full debug output
 WafSight -V 3 detect https://example.com
+
+# Max verbosity without level (defaults to 3)
+WafSight -v detect https://example.com
+WafSight --verbose detect https://example.com
 ```
 
 ## Exit Codes

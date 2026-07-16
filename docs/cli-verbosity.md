@@ -5,6 +5,8 @@ Understanding and using verbosity levels in WafSight CLI for effective debugging
 ## Overview
 
 Verbosity levels control how much detail WafSight outputs during detection. This is crucial for:
+
+> **Note:** The verbose flag is case-insensitive. `-v`, `-V`, `--verbose`, `--VERBOSE`, and `--Verbose` all work. When used without a value (e.g., `WafSight -v detect <url>`), it defaults to level 3 (High).
 - **Debugging** detection issues
 - **Monitoring** in production
 - **Auditing** security scans

@@ -64,7 +64,7 @@ public class Program
                 ListProviders(loggerFactory);
                 break;
 
-            case "--version" or "-v" or "version":
+            case "--version" or "version":
                 Console.WriteLine("WafSight CLI v" + typeof(Program).Assembly.GetName().Version);
                 break;
 
@@ -79,14 +79,22 @@ public class Program
         }
     }
 
+    private static bool IsVerboseFlag(string arg) =>
+        "--verbose".Equals(arg, StringComparison.OrdinalIgnoreCase) ||
+        "-V".Equals(arg, StringComparison.OrdinalIgnoreCase) ||
+        "-v".Equals(arg, StringComparison.OrdinalIgnoreCase);
+
     private static string[] FilterArgs(string[] args)
     {
         var filtered = new List<string>();
         for (int i = 0; i < args.Length; i++)
         {
-            if ((args[i] == "--verbose" || args[i] == "-V") && i + 1 < args.Length)
+            if (IsVerboseFlag(args[i]))
             {
-                i++; // skip verbosity value
+                if (i + 1 < args.Length && int.TryParse(args[i + 1], out int level) && level >= 0 && level <= 3)
+                {
+                    i++;
+                }
                 continue;
             }
             filtered.Add(args[i]);
@@ -98,7 +106,7 @@ public class Program
     {
         for (int i = 0; i < args.Length; i++)
         {
-            if (args[i] == "--verbose" || args[i] == "-V")
+            if (IsVerboseFlag(args[i]))
             {
                 if (i + 1 < args.Length && int.TryParse(args[i + 1], out int level) && level >= 0 && level <= 3)
                 {
@@ -212,14 +220,15 @@ public class Program
         Console.WriteLine(@"Usage: WafSight [options] <command> [arguments]
 
 Options:
-  --verbose, -V [0-3]       Set verbosity level (0=None, 1=Low, 2=Medium, 3=High)
-                            Default: 0 (None)
+  --verbose, -v, -V [0-3]  Set verbosity level (0=None, 1=Low, 2=Medium, 3=High)
+                           Without a value defaults to 3 (High)
+                           Default: 0 (None)
 
 Commands:
   detect, -d <url>          Detect WAF/CDN for a single URL
   batch,   -b <file>        Detect WAF/CDN for URLs in a file (one per line)
   providers, -p             List all registered providers
-  version,  -v              Show version
+  version                   Show version
   help,     -h              Show this help
 
 Verbosity Levels:
@@ -231,7 +240,9 @@ Verbosity Levels:
 Examples:
   WafSight detect https://example.com
   WafSight --verbose 2 detect https://example.com
+  WafSight -v 3 detect https://example.com
   WafSight -V 3 detect https://example.com
+  WafSight --VERBOSE detect https://example.com
   WafSight batch urls.txt
   WafSight providers");
     }
