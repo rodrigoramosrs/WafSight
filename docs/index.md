@@ -3,7 +3,7 @@
   <img src="assets/logo.png" alt="WafSight" style="width:72px;height:72px;border-radius:16px;margin-bottom:16px" />
   <div style="font-size:13px;color:var(--text-dim);font-weight:500;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Documentation</div>
   <p style="font-size:16px;color:var(--text-muted);max-width:480px;margin:0 auto">
-    Your guide to using WafSight — a high-performance, extensible web application firewall for .NET.
+    Your guide to using WafSight — a high-performance WAF/CDN detection library for .NET.
   </p>
 </div>
 

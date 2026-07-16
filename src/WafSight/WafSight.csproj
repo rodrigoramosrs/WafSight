@@ -9,7 +9,7 @@
     <Version>2.0.0</Version>
     <Authors>WafSight Team</Authors>
     <Description>High-performance WAF/CDN detection library for .NET</Description>
-    <PackageTags>waf;cdn;security;detection;firewall;wafsight</PackageTags>
+    <PackageTags>waf;cdn;security;detection;wafsight</PackageTags>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
     <IncludeSymbols>true</IncludeSymbols>
