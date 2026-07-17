@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
-      skip-release: ${{ steps.set_skip.outputs.skip_release }}
+      skip_release: ${{ steps.set_skip.outputs.skip_release }}
 
     steps:
       - name: Checkout
