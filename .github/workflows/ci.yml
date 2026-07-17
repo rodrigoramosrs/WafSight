@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
-      skip-release: ${{ steps.changes.outputs.code_changed == 'false' }}
+      skip-release: ${{ steps.set_skip.outputs.skip_release }}
 
     steps:
       - name: Checkout
@@ -58,6 +58,15 @@ jobs:
           fi
 
           echo "code_changed=$CODE_CHANGED" >> "$GITHUB_OUTPUT"
+
+      - name: Set skip release output
+        id: set_skip
+        run: |
+          if [ "$(steps.changes.outputs.code_changed)" = "false" ]; then
+            echo "skip_release=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip_release=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Calculate version
         id: version
