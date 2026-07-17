@@ -6,14 +6,16 @@ Internal details of how WafSight detects WAFs and CDNs.
 
 WafSight uses multiple detection methods to identify WAFs and CDNs:
 
-1. **HTTP Headers** - Analyze response headers
-2. **DNS Records** - Check DNS configuration
-3. **TLS Certificates** - Examine certificate details
-4. **Cookies** - Look for tracking/security cookies
-5. **Status Codes** - Analyze HTTP status codes
-6. **Response Timing** - Measure response times
-7. **Response Body** - Scan for patterns
-8. **Payload Probing** - Send test payloads
+1. **HTTP Headers** (passive) - Analyze response headers
+2. **DNS Records** (active) - Check DNS configuration
+3. **TLS Certificates** (active) - Examine certificate details
+4. **Cookies** (passive) - Look for tracking/security cookies
+5. **Status Codes** (passive) - Analyze HTTP status codes
+6. **Response Timing** (active) - Measure response times
+7. **Response Body** (passive) - Scan for patterns
+8. **Payload Probing** (active) - Send test payloads
+
+> **Passive methods** (headers, cookies, status codes, body) can be used via `DetectFromResponseAsync(HttpResponseData)` without making any additional HTTP requests. Active methods (DNS, TLS, timing, payload probing) require the full `DetectAsync(url)` which performs network requests.
 
 ## Detection Flow
 
@@ -492,6 +494,28 @@ var bestWaf = providers
     .OrderByDescending(p => p.Score)
     .First();
 ```
+
+## Passive vs Active Detection
+
+Passive detection analyzes an existing HTTP response without making any network requests.
+Only methods that rely on response headers, body, cookies, and status codes are used.
+
+| Method | Passive | Active | Requires |
+|--------|---------|--------|----------|
+| HTTP Headers | ✅ Yes | ✅ Yes | Response headers |
+| Cookies | ✅ Yes | ✅ Yes | Set-Cookie headers |
+| Status Codes | ✅ Yes | ✅ Yes | Status code |
+| Response Body | ✅ Yes | ✅ Yes | Response body |
+| DNS Records | ❌ No | ✅ Yes | DNS resolution |
+| TLS Certificates | ❌ No | ✅ Yes | TLS connection |
+| Response Timing | ❌ No | ✅ Yes | Timing measurement |
+| Payload Probing | ❌ No | ✅ Yes | Test payloads |
+
+**When to use passive detection:**
+- You already have the HTTP response (Playwright, proxy, curl)
+- You want to avoid additional network requests
+- You're working in a browser automation context
+- Rate limiting or WAF blocking makes active probing risky
 
 ## Caveats
 

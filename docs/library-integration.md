@@ -208,6 +208,103 @@ var client = new WafDetectorClient();
 Console.WriteLine($"Registered providers: {client.GetProviderCount()}");
 ```
 
+## Passive Detection (No HTTP Requests)
+
+Analyze an existing HTTP response without making additional network requests.
+
+### Basic Usage
+
+```csharp
+using WafSight;
+using WafSight.Models;
+
+var client = new WafDetectorClient();
+
+// Build response data from an existing response (e.g. Playwright, HttpClient, proxy)
+var response = new HttpResponseData
+{
+    Url = "https://example.com/admin",
+    StatusCode = 403,
+    Headers = new Dictionary<string, string>
+    {
+        { "cf-ray", "abc123-CDG" },
+        { "server", "cloudflare" }
+    },
+    Body = "<html>Access Denied</html>"
+};
+
+var result = await client.DetectFromResponseAsync(response);
+
+Console.WriteLine($"WAF detected: {result.HasWaf}");
+Console.WriteLine($"WAF name: {result.Waf?.Name ?? "none"}");
+Console.WriteLine($"Confidence: {result.Waf?.Confidence:P0}");
+```
+
+### From Browser Automation (Playwright)
+
+```csharp
+// Example: analyzing a response already captured by Playwright
+var playwrightResponse = await page.GotoAsync("https://example.com");
+var statusCode = playwrightResponse.Status;
+var headers = playwrightResponse.Headers;
+var body = await playwrightResponse.BodyAsync();
+
+var response = new HttpResponseData
+{
+    Url = playwrightResponse.Url,
+    StatusCode = (int)statusCode,
+    Headers = new Dictionary<string, string>(headers, StringComparer.OrdinalIgnoreCase),
+    Body = System.Text.Encoding.UTF8.GetString(body)
+};
+
+var result = await client.DetectFromResponseAsync(response);
+```
+
+### With Error Handling
+
+```csharp
+try
+{
+    var result = await client.DetectFromResponseAsync(response);
+    
+    if (result.HasWaf)
+    {
+        Console.WriteLine($"Protected by {result.Waf.Name} ({result.Waf.Confidence:P0})");
+        
+        foreach (var evidence in result.Evidence)
+        {
+            Console.WriteLine($"  [{evidence.Method}] {evidence.Name}: {evidence.Value}");
+        }
+    }
+    
+    if (result.HasCdn)
+    {
+        Console.WriteLine($"CDN: {result.Cdn.Name} ({result.Cdn.Confidence:P0})");
+    }
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Passive detection failed: {ex.Message}");
+}
+```
+
+### Integration with Existing WAF Detectors
+
+```csharp
+// Use passive detection as a pre-filter before active probing
+var passiveResult = await client.DetectFromResponseAsync(response);
+
+if (passiveResult.HasWaf)
+{
+    Console.WriteLine("WAF detected passively, skipping active probing");
+}
+else
+{
+    // Fall back to active detection (makes HTTP requests)
+    var activeResult = await client.DetectAsync(response.Url);
+}
+```
+
 ## Result Analysis
 
 ### Check Detection
