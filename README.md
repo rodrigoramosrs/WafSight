@@ -2,152 +2,212 @@
 
 # WafSight
 
-*High-performance WAF/CDN detection library and CLI for .NET*
+### Detect WAFs & CDNs with confidence — built for speed, designed for .NET
 
-[![NuGet Version](https://img.shields.io/nuget/v/WafSight?style=flat-square&logo=nuget&label=NuGet)](https://www.nuget.org/packages/WafSight)
-[![NuGet Downloads](https://img.shields.io/nuget/dt/WafSight?style=flat-square&logo=nuget&label=Downloads)](https://www.nuget.org/packages/WafSight)
-[![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
-[![.NET](https://img.shields.io/badge/.NET-8.0-5C2D91?style=flat-square&logo=dotnet)](https://dotnet.microsoft.com)
-[![Build](https://img.shields.io/github/actions/workflow/status/rodrigoramosrs/wafsight/ci.yml?style=flat-square&logo=github&label=Build)](https://github.com/rodrigoramosrs/wafsight/actions)
-[![Stars](https://img.shields.io/github/stars/rodrigoramosrs/wafsight?style=flat-square&logo=github&label=Stars)](https://github.com/rodrigoramosrs/wafsight)
-[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey?style=flat-square)](https://github.com/rodrigoramosrs/wafsight)
-[![AOT](https://img.shields.io/badge/AOT-Compatible-success?style=flat-square)](https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot)
+[![NuGet Version](https://img.shields.io/nuget/v/WafSight?style=for-the-badge&logo=nuget&logoColor=white&label=NuGet&labelColor=1a1a1a&color=29A1DC)](https://www.nuget.org/packages/WafSight)
+[![NuGet Downloads](https://img.shields.io/nuget/dt/WafSight?style=for-the-badge&logo=nuget&logoColor=white&label=Downloads&labelColor=1a1a1a&color=29A1DC)](https://www.nuget.org/packages/WafSight)
+[![Build](https://img.shields.io/github/actions/workflow/status/rodrigoramosrs/wafsight/ci.yml?style=for-the-badge&logo=github&logoColor=white&label=Build&labelColor=1a1a1a)](https://github.com/rodrigoramosrs/wafsight/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-6e40c9?style=for-the-badge&labelColor=1a1a1a)](LICENSE)
+[![.NET 10](https://img.shields.io/badge/.NET-10.0-512bd4?style=for-the-badge&logo=dotnet&logoColor=white&labelColor=1a1a1a)](https://dotnet.microsoft.com)
+[![AOT](https://img.shields.io/badge/Native-AOT-26a65a?style=for-the-badge&labelColor=1a1a1a)](https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot)
 
 ---
 
-Detects Web Application Firewalls (WAF) and Content Delivery Networks (CDN) by analyzing HTTP headers, response bodies, cookies, status codes, DNS records, timing, TLS certificates, and payload probing.
+WafSight is a high-performance WAF/CDN detection engine for .NET. Analyze HTTP responses, DNS records, TLS certificates, and payload probes — then get a scored, ranked verdict with confidence levels.
 
-For complete documentation, visit [rodrigoramosrs.github.io/WafSight](https://rodrigoramosrs.github.io/WafSight/).
+Available as a **library** (NuGet), a **cross-platform CLI** (native AOT), and a **DI-ready service** for ASP.NET Core.
+
+> Full documentation at [rodrigoramosrs.github.io/WafSight](https://rodrigoramosrs.github.io/WafSight/)
 
 ## Features
 
-- **8 built-in providers**: CloudFlare, AWS, Akamai, Fastly, Azure, Imperva, Sucuri, F5
-- **Generic WAF detection** via payload probing (XSS, SQLi, LFI, XXE, RCE)
-- **Weighted evidence scoring** with tiered confidence levels
-- **DNS analysis** via CNAME, A, NS, and TXT records
-- **Batch detection** with concurrency control
-- **Resilient HTTP client** with retry and timeout policies
-- **Dependency Injection support** for ASP.NET Core integration
-- **CLI tool** with configurable verbosity levels
-- **AOT native publishing** for cross-platform standalone executables
+| | |
+|---|---|
+| **8 Providers** | CloudFlare · AWS · Akamai · Fastly · Azure · Imperva · Sucuri · F5 |
+| **Generic Detection** | Payload probing — XSS, SQLi, LFI, XXE, RCE |
+| **Evidence Scoring** | Weighted, tiered confidence with caveats |
+| **DNS Analysis** | CNAME, A, NS, TXT record inspection |
+| **Batch Mode** | Concurrent URL detection with concurrency control |
+| **Resilient** | Built-in retry policies, timeouts, circuit breakers |
+| **DI Ready** | First-class `IServiceCollection` integration |
+| **Native AOT** | Zero-framework standalone binaries for all platforms |
+| **CLI** | 4 verbosity levels, batch files, provider listing |
 
 ## Quick Start
 
-### Install the package
+### NuGet
 
 ```bash
 dotnet add package WafSight
 ```
 
-### Use as a library
+### Library
 
 ```csharp
 using WafSight;
-using Microsoft.Extensions.Logging;
 
-// With default logging
-using var client = new WafDetectorClient();
-
-// With custom ILoggerFactory
-var loggerFactory = LoggerFactory.Create(builder =>
-{
-    builder.AddConsole();
-    builder.SetMinimumLevel(LogLevel.Information);
-});
-using var client = new WafDetectorClient(loggerFactory);
-
-// Detect single URL
+var client = new WafDetectorClient();
 var result = await client.DetectAsync("https://example.com");
 
 if (result.HasWaf)
 {
-    Console.WriteLine($"WAF: {result.Waf.Name} ({result.Waf.Confidence:P0})");
+    Console.WriteLine($"WAF: {result.Waf.Name} (confidence: {result.Waf.Confidence:P0})");
 }
 
 if (result.HasCdn)
 {
-    Console.WriteLine($"CDN: {result.Cdn.Name} ({result.Cdn.Confidence:P0})");
+    Console.WriteLine($"CDN: {result.Cdn.Name} (confidence: {result.Cdn.Confidence:P0})");
 }
-
-// Batch detection
-var urls = new[] { "https://example.com", "https://cloudflare.com" };
-var batchResults = await client.DetectBatchAsync(urls, maxConcurrency: 3);
-
-// List providers
-var providers = client.ListProviders();
 ```
 
-### Use the CLI
+### CLI
 
 ```bash
-# Detect a single URL (shows result by default)
-WafSight detect https://example.com
+# Quick detection
+wafsight detect https://example.com
 
-# Show detailed logs with verbosity levels
-WafSight -V 1 detect https://example.com    # Low: errors + basic status
-WafSight -V 2 detect https://example.com    # Medium: + headers, DNS, scores
-WafSight -V 3 detect https://example.com    # High: + payloads, evidence, timing
+# Verbose output
+wafsight -V 3 detect https://example.com
 
-# Batch detect from a file
-WafSight batch urls.txt
+# Batch from file
+wafsight batch urls.txt
 
-# List registered providers
-WafSight providers
-
-# Show help
-WafSight --help
+# List providers
+wafsight providers
 ```
 
-#### Verbosity Levels
-
-| Level | Description |
-|-------|-------------|
-| `0` or `None` | Only errors and critical information (default) |
-| `1` or `Low` | Errors + basic detection results |
-| `2` or `Medium` | Low + headers, DNS records, provider scores |
-| `3` or `High` | Medium + payload probing, evidence details, timing |
-
-## Dependency Injection
+### Dependency Injection
 
 ```csharp
-using Microsoft.Extensions.DependencyInjection;
-
 services.AddWafDetector(options =>
 {
     options.Timeout = TimeSpan.FromSeconds(15);
     options.EnableGenericDetection = true;
     options.EnableDnsAnalysis = true;
 });
-
-// Inject IWafDetector where needed
-public class MyService
-{
-    private readonly IWafDetector _detector;
-
-    public MyService(IWafDetector detector)
-    {
-        _detector = detector;
-    }
-}
 ```
+
+## Detection Architecture
+
+```
++-------------------------------------------------+
+|              WafDetectorClient                   |
+|                                                  |
+|  +--------------+    +-----------------------+   |
+|  |  HTTP Client |----+  Response Collector   |   |
+|  |  (resilient) |    +-----------+-----------+   |
+|  +--------------+                |               |
+|                                  | Headers /     |
+|                    +-------------v-------------+  |
+|                    |   Provider Registry        |  |
+|                    |                            |  |
+|  +-----------------+---------------------------+  |
+|  |  CloudFlare ----|                            |  |
+|  |  AWS ----------|    IDetectionProvider      |  |
+|  |  Akamai -------|    (8 providers)           |  |
+|  |  Fastly -------|                           |  |
+|  |  Azure --------|                            |  |
+|  |  Imperva ------|  Evidence Collector        |  |
+|  |  Sucuri -------|  -> Evidence Scorer       |  |
+|  |  F5 ----------|   -> Confidence Ranking    |  |
+|  |  Generic ------|  -> Detection Result      |  |
+|  +-----------------+---------------------------+  |
+|                                                  |
+|  +-------------------------------------------+   |
+|  |  Evidence Scorer  |  DNS Analyzer         |   |
+|  |  (weights + tiers) |  (CNAME, A, NS, TXT) |   |
+|  +-------------------------------------------+   |
+|                                                  |
+|                    +------------------+          |
+|                    | DetectionResult  |          |
+|                    |  WAF + CDN       |          |
+|                    |  Confidence      |          |
+|                    |  Caveats         |          |
+|                    +------------------+          |
++-------------------------------------------------+
+```
+
+## Supported Providers
+
+| Provider | WAF | CDN | Key Signals |
+|----------|:---:|:---:|-------------|
+| **CloudFlare** | Yes | Yes | `cf-ray` header, cookies, challenge pages |
+| **AWS** | Yes | Yes | `x-amz-cf-id`, `x-amz-cf-pop`, CloudFront |
+| **Akamai** | Yes | Yes | `x-akamai-transformed`, server header |
+| **Fastly** | Yes | Yes | `x-fastly-request-id`, surrogate keys |
+| **Azure** | Yes | Yes | `azure-ref`, `X-ARR-LogId`, server header |
+| **Imperva** | Yes | Yes | `X-CDN`, cookies, server fingerprint |
+| **Sucuri** | Yes | Yes | `X-Sucuri-ID`, block page detection |
+| **F5** | Yes | Yes | `BIG-IP` server, `Last-Mile`, cookies |
+
+## Evidence Scoring
+
+WafSight doesn't just detect — it scores confidence:
+
+| Evidence Tier | Sources | Weight |
+|---------------|---------|--------|
+| **Tier 1** (Highest) | HTTP Headers, TLS Certificates, DNS | 0.9 - 1.0 |
+| **Tier 2** (Strong) | Cookies, Response Status Codes | 0.7 - 0.8 |
+| **Tier 3** (Moderate) | Response Body Signatures | 0.4 - 0.6 |
+| **Tier 4** (Weak) | Timing Analysis, Generic Probes | 0.1 - 0.3 |
+
+Results include **caveats** when evidence is weak (e.g., body-only detection without header confirmation).
+
+## CLI
+
+```
+Usage: wafsight [options] <command> [arguments]
+
+Options:
+  --verbose, -v, -V [0-3]  Verbosity level (0=None, 1=Low, 2=Medium, 3=High)
+
+Commands:
+  detect, -d <url>          Detect WAF/CDN for a single URL
+  batch,   -b <file>        Detect WAF/CDN for URLs in a file (one per line)
+  providers, -p             List all registered providers
+  version                   Show version
+  help,     -h              Show this help
+
+Verbosity Levels:
+  0 (None)   - Only errors and critical information
+  1 (Low)    - Errors + basic status
+  2 (Medium) - Low + headers, DNS records, provider scores
+  3 (High)   - Medium + payload probing, evidence details, timing
+```
+
+### Binary Downloads
+
+| Platform | AOT (Standalone) | Framework Dependent |
+|----------|-----------------|---------------------|
+| Windows x64 | `WafSight-win-x64.zip` | `WafSight-win-x64-framework.zip` |
+| Linux x64 | `WafSight-linux-x64.tar.gz` | `WafSight-linux-x64-framework.tar.gz` |
+| macOS x64 | `WafSight-osx-x64.tar.gz` | `WafSight-osx-x64-framework.tar.gz` |
+| macOS ARM64 | `WafSight-osx-arm64.tar.gz` | `WafSight-osx-arm64-framework.tar.gz` |
+
+> **AOT** binaries are native, self-contained executables (~9 MB). **Framework Dependent** requires [.NET 10 Runtime](https://dotnet.microsoft.com/download).
+>
+> Download from [GitHub Releases](https://github.com/rodrigoramosrs/wafsight/releases).
 
 ## Requirements
 
-- .NET 10.0 or later
-
----
-
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
-[![NuGet](https://img.shields.io/nuget/v/WafSight?style=flat-square)](https://www.nuget.org/packages/WafSight)
-[![GitHub Stars](https://img.shields.io/github/stars/rodrigoramosrs/wafsight?style=flat-square&label=Stars)](https://github.com/rodrigoramosrs/wafsight)
+| Component | Minimum |
+|-----------|---------|
+| **.NET** | 10.0 |
+| **AOT Binary** | None (standalone) |
+| **Framework Binary** | .NET 10 Runtime |
+| **Platforms** | Windows, Linux, macOS |
 
 ## Special Thanks
 
-This project would not exist without the inspiration and knowledge provided by these incredible open-source projects:
+This project was inspired by outstanding open-source work:
 
-- [**waf-detector**](https://github.com/ammarion/waf-detector) — A fast and efficient WAF detection tool written in Go by Ammar Atef. Its architecture and provider model heavily influenced WafSight's design.
-- [**wafw00f**](https://github.com/EnableSecurity/wafw00f) — The legendary WAF fingerprinting tool by EnableSecurity. Its signature-based detection approach and extensive provider database set the standard for the entire ecosystem.
+| Project | Author | Contribution |
+|---------|--------|--------------|
+| [**waf-detector**](https://github.com/ammarion/waf-detector) | Ammar Atef | Architecture and provider model |
+| [**wafw00f**](https://github.com/EnableSecurity/wafw00f) | EnableSecurity | Signature-based detection approach |
 
-If you find WafSight useful, consider showing your appreciation to these projects too — give them a star on GitHub, open issues, or contribute code. Open source thrives on community support.
+Open source thrives on community. If WafSight is useful to you, consider supporting these projects too.
 
-To the maintainers and contributors of these projects: thank you for paving the way.
+---
+
+*MIT License · Built for .NET*
