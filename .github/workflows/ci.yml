@@ -37,9 +37,9 @@ jobs:
 
       - name: Check for code changes
         id: changes
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          export GH_TOKEN=$GITHUB_TOKEN
-          
           LAST_RELEASE_TAG=$(gh release list --limit 1 --json tagName --jq '.[0].tagName')
           
           if [ -n "$LAST_RELEASE_TAG" ]; then
