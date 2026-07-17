@@ -70,6 +70,47 @@ if (result.HasWaf)
 
 ---
 
+#### DetectFromResponseAsync
+
+Passive detection from an existing HTTP response.
+No additional HTTP requests are made — only analyzes headers, body, cookies, and status code.
+
+```csharp
+public Task<DetectionResult> DetectFromResponseAsync(
+    HttpResponseData response,
+    CancellationToken cancellationToken = default)
+```
+
+**Parameters:**
+- `response` - The HTTP response data (headers, body, status code, URL)
+- `cancellationToken` - Optional cancellation token
+
+**Returns:** `Task<DetectionResult>`
+
+**Example:**
+```csharp
+var response = new HttpResponseData
+{
+    Url = "https://example.com/admin",
+    StatusCode = 403,
+    Headers = new Dictionary<string, string>
+    {
+        { "cf-ray", "abc123-CDG" },
+        { "server", "cloudflare" }
+    },
+    Body = "<html>Access Denied</html>"
+};
+
+var result = await client.DetectFromResponseAsync(response);
+
+if (result.HasWaf)
+{
+    Console.WriteLine($"WAF: {result.Waf.Name} ({result.Waf.Confidence:P0})");
+}
+```
+
+---
+
 #### DetectBatchAsync
 
 Detects WAF/CDN for multiple URLs concurrently.
