@@ -20,6 +20,15 @@ public interface IWafDetector : IDisposable
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Passive detection from an existing HTTP response.
+    /// No additional HTTP requests are made — only analyzes headers, body, cookies, and status code.
+    /// Ideal for environments where you already have a response (e.g. browser automation, proxies).
+    /// </summary>
+    Task<DetectionResult> DetectFromResponseAsync(
+        HttpResponseData response,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Lists all registered providers
     /// </summary>
     IReadOnlyList<ProviderMetadata> ListProviders();

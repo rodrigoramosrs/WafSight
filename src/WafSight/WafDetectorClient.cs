@@ -117,6 +117,46 @@ public class WafDetectorClient : IWafDetector, IDisposable
     }
 
     /// <inheritdoc/>
+    public async Task<DetectionResult> DetectFromResponseAsync(
+        HttpResponseData response,
+        CancellationToken cancellationToken = default)
+    {
+        var startTime = DateTime.UtcNow;
+        var url = response.Url;
+        _logger?.LogDebug("Starting passive detection from response for url: {Url}", url);
+
+        try
+        {
+            var context = new DetectionContext
+            {
+                Url = url,
+                Response = response
+            };
+
+            var result = await _registry.DetectAllAsync(context);
+            result.DetectionTimeMs = (long)(DateTime.UtcNow - startTime).TotalMilliseconds;
+
+            _logger?.LogInformation("Passive detection completed for {Url}: WAF={Waf}, CDN={Cdn}, Time={Time}ms",
+                url, result.HasWaf ? result.Waf?.Name : "None",
+                result.HasCdn ? result.Cdn?.Name : "None",
+                result.DetectionTimeMs);
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "Error during passive detection for {Url}", url);
+
+            return new DetectionResult
+            {
+                Url = url,
+                DetectionTimeMs = (long)(DateTime.UtcNow - startTime).TotalMilliseconds,
+                Caveats = new List<string> { $"Passive detection failed: {ex.Message}" }
+            };
+        }
+    }
+
+    /// <inheritdoc/>
     public async Task<Dictionary<string, DetectionResult>> DetectBatchAsync(
         IEnumerable<string> urls,
         int maxConcurrency = 3,
