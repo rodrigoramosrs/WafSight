@@ -231,9 +231,10 @@ jobs:
             -p:IlcFoldIdenticalMethodBodies=true `
             -p:Version=${{ needs.calculate-version.outputs.version }} `
             -o publish/win-x64-aot
-          Rename-Item publish/win-x64-aot/WafSight.Cli.exe wafsight.exe -Force
+          Move-Item publish/win-x64-aot/WafSight.Cli.exe publish/win-x64-aot/wafsight.exe -Force
           if (Test-Path publish/win-x64-aot/WafSight.Cli.pdb) {
-            Rename-Item publish/win-x64-aot/WafSight.Cli.pdb wafsight.pdb -Force
+            Remove-Item publish/win-x64-aot/wafsight.pdb -ErrorAction SilentlyContinue
+            Move-Item publish/win-x64-aot/WafSight.Cli.pdb publish/win-x64-aot/wafsight.pdb -Force
           }
 
       - name: Publish win-x64 (Framework Dependent)
