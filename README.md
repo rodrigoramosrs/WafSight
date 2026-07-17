@@ -1,4 +1,4 @@
-![WafSight](docs/assets/logo.png)
+![WafSight](https://raw.githubusercontent.com/rodrigoramosrs/wafsight/refs/heads/dev/docs/assets/logo.png)
 
 # WafSight
 
