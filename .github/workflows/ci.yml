@@ -6,6 +6,8 @@ on:
     paths-ignore:
       - 'docs/index.json'
   pull_request:
+  merge_group:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -25,34 +27,62 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
+      skip-release: ${{ steps.changes.outputs.code_changed == 'false' }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for code changes
+        id: changes
+        run: |
+          LAST_RELEASE_TAG=$(gh release list --limit 1 --json tagName --jq '.[0].tagName')
+          
+          if [ -n "$LAST_RELEASE_TAG" ]; then
+            CHANGED_FILES=$(git diff --name-only "${LAST_RELEASE_TAG}...HEAD" -- "*.cs" "*.csproj" "*.yml" "*.yaml" "*.ps1" "*.sh" "Directory.Build.props" 2>/dev/null)
+          else
+            CHANGED_FILES=$(git diff --name-only "HEAD~1...HEAD" -- "*.cs" "*.csproj" "*.yml" "*.yaml" "*.ps1" "*.sh" "Directory.Build.props" 2>/dev/null)
+          fi
+
+          CODE_CHANGED=false
+          if [ -n "$CHANGED_FILES" ]; then
+            echo "Changed files:"
+            echo "$CHANGED_FILES"
+            CODE_CHANGED=true
+          else
+            echo "No code changes detected. Skipping release."
+          fi
+
+          echo "code_changed=$CODE_CHANGED" >> "$GITHUB_OUTPUT"
 
       - name: Calculate version
         id: version
+        if: steps.changes.outputs.code_changed == 'true'
         run: |
           YEAR=$(date +%Y)
           MONTH=$(date -u +%-m)
+          DAY=$(date -u +%-d)
 
           EXISTING=$(gh release list --limit 100 --json tagName |
-            jq -r --arg year "$YEAR" --arg month "$MONTH" '.[] | select(.tagName | test("^" + $year + "." + $month + "\\.\\d+\\.\\d+$")) | .tagName' |
+            jq -r --arg year "$YEAR" --arg month "$MONTH" --arg day "$DAY" '.[] | select(.tagName | test("^v?" + $year + "\\." + $month + "\\." + $day + "\\.\\d+$")) | .tagName' |
             sort -V | tail -1)
 
           if [ -z "$EXISTING" ]; then
-            MINOR=1
+            BUILD=1
           else
-            PREVIOUS_MINOR=$(echo "$EXISTING" | awk -F. '{print $4}')
-            MINOR=$((PREVIOUS_MINOR + 1))
+            PREVIOUS_BUILD=$(echo "$EXISTING" | sed 's/^v//' | awk -F. '{print $4}')
+            BUILD=$((PREVIOUS_BUILD + 1))
           fi
 
-          VERSION="$YEAR.$MONTH.0.$MINOR"
+          VERSION="$YEAR.$MONTH.$DAY.$BUILD"
           echo "Computed version: $VERSION"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
   build-and-test:
-    needs: calculate-version
+    needs: [calculate-version]
+    if: needs.calculate-version.outputs.skip_release == 'false'
     runs-on: windows-latest
     outputs:
       version: ${{ needs.calculate-version.outputs.version }}
@@ -93,7 +123,7 @@ jobs:
   publish-nuget:
     needs: [calculate-version, build-and-test]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.calculate-version.outputs.skip_release == 'false'
     environment: production
     permissions:
       id-token: write
@@ -154,7 +184,7 @@ jobs:
   publish-win-x64:
     needs: [calculate-version, build-and-test]
     runs-on: windows-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.calculate-version.outputs.skip_release == 'false'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -175,7 +205,7 @@ jobs:
       - name: Restore
         run: dotnet restore
 
-      - name: Publish win-x64 (AOT)
+      - name: Publish win-x64 (AOT Self-Contained)
         shell: pwsh
         run: |
           dotnet publish src/WafSight.Cli/WafSight.Cli.csproj `
@@ -187,27 +217,47 @@ jobs:
             -p:StripSymbols=true `
             -p:IlcFoldIdenticalMethodBodies=true `
             -p:Version=${{ needs.calculate-version.outputs.version }} `
-            -o publish/win-x64
-          Move-Item publish/win-x64/WafSight.Cli.exe publish/win-x64/wafsight.exe -Force
-          if (Test-Path publish/win-x64/WafSight.Cli.pdb) {
-            Move-Item publish/win-x64/WafSight.Cli.pdb publish/win-x64/wafsight.pdb -Force
+            -o publish/win-x64-aot
+          Rename-Item publish/win-x64-aot/WafSight.Cli.exe wafsight.exe -Force
+          if (Test-Path publish/win-x64-aot/WafSight.Cli.pdb) {
+            Rename-Item publish/win-x64-aot/WafSight.Cli.pdb wafsight.pdb -Force
           }
 
-      - name: Package win-x64
+      - name: Publish win-x64 (Framework Dependent)
         shell: pwsh
         run: |
-          Compress-Archive -Path publish/win-x64/wafsight.exe -DestinationPath WafSight-win-x64.zip -Force
+          dotnet publish src/WafSight.Cli/WafSight.Cli.csproj `
+            -c ${{ env.CONFIGURATION }} `
+            -r win-x64 `
+            -p:SelfContained=false `
+            -p:Version=${{ needs.calculate-version.outputs.version }} `
+            -o publish/win-x64-fx
+          Rename-Item publish/win-x64-fx/WafSight.Cli.exe wafsight.exe -Force
 
-      - name: Upload win-x64 artifact
+      - name: Package win-x64 (AOT)
+        shell: pwsh
+        run: Compress-Archive -Path publish/win-x64-aot/wafsight.exe -DestinationPath WafSight-win-x64.zip -Force
+
+      - name: Package win-x64 (Framework Dependent)
+        shell: pwsh
+        run: Compress-Archive -Path publish/win-x64-fx/* -DestinationPath WafSight-win-x64-framework.zip -Force
+
+      - name: Upload win-x64 AOT artifact
         uses: actions/upload-artifact@v4
         with:
           name: wafsight-win-x64
           path: WafSight-win-x64.zip
 
+      - name: Upload win-x64 Framework artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wafsight-win-x64-framework
+          path: WafSight-win-x64-framework.zip
+
   publish-linux-x64:
     needs: [calculate-version, build-and-test]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.calculate-version.outputs.skip_release == 'false'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -228,7 +278,7 @@ jobs:
       - name: Restore
         run: dotnet restore
 
-      - name: Publish linux-x64 (AOT)
+      - name: Publish linux-x64 (AOT Self-Contained)
         run: |
           set -e
           dotnet publish src/WafSight.Cli/WafSight.Cli.csproj \
@@ -240,23 +290,42 @@ jobs:
             -p:StripSymbols=true \
             -p:IlcFoldIdenticalMethodBodies=true \
             -p:Version=${{ needs.calculate-version.outputs.version }} \
-            -o publish/linux-x64
-          mv publish/linux-x64/WafSight.Cli publish/linux-x64/wafsight
+            -o publish/linux-x64-aot
+          mv publish/linux-x64-aot/WafSight.Cli publish/linux-x64-aot/wafsight
 
-      - name: Package linux-x64
+      - name: Publish linux-x64 (Framework Dependent)
         run: |
-          tar -czf WafSight-linux-x64.tar.gz -C publish/linux-x64 wafsight
+          set -e
+          dotnet publish src/WafSight.Cli/WafSight.Cli.csproj \
+            -c ${{ env.CONFIGURATION }} \
+            -r linux-x64 \
+            -p:SelfContained=false \
+            -p:Version=${{ needs.calculate-version.outputs.version }} \
+            -o publish/linux-x64-fx
+          mv publish/linux-x64-fx/WafSight.Cli publish/linux-x64-fx/wafsight
 
-      - name: Upload linux-x64 artifact
+      - name: Package linux-x64 (AOT)
+        run: tar -czf WafSight-linux-x64.tar.gz -C publish/linux-x64-aot wafsight
+
+      - name: Package linux-x64 (Framework Dependent)
+        run: tar -czf WafSight-linux-x64-framework.tar.gz -C publish/linux-x64-fx .
+
+      - name: Upload linux-x64 AOT artifact
         uses: actions/upload-artifact@v4
         with:
           name: wafsight-linux-x64
           path: WafSight-linux-x64.tar.gz
 
+      - name: Upload linux-x64 Framework artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wafsight-linux-x64-framework
+          path: WafSight-linux-x64-framework.tar.gz
+
   publish-osx-x64:
     needs: [calculate-version, build-and-test]
     runs-on: macos-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.calculate-version.outputs.skip_release == 'false'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -277,7 +346,7 @@ jobs:
       - name: Restore
         run: dotnet restore
 
-      - name: Publish osx-x64 (AOT)
+      - name: Publish osx-x64 (AOT Self-Contained)
         run: |
           set -e
           dotnet publish src/WafSight.Cli/WafSight.Cli.csproj \
@@ -289,23 +358,42 @@ jobs:
             -p:StripSymbols=true \
             -p:IlcFoldIdenticalMethodBodies=true \
             -p:Version=${{ needs.calculate-version.outputs.version }} \
-            -o publish/osx-x64
-          mv publish/osx-x64/WafSight.Cli publish/osx-x64/wafsight
+            -o publish/osx-x64-aot
+          mv publish/osx-x64-aot/WafSight.Cli publish/osx-x64-aot/wafsight
 
-      - name: Package osx-x64
+      - name: Publish osx-x64 (Framework Dependent)
         run: |
-          tar -czf WafSight-osx-x64.tar.gz -C publish/osx-x64 wafsight
+          set -e
+          dotnet publish src/WafSight.Cli/WafSight.Cli.csproj \
+            -c ${{ env.CONFIGURATION }} \
+            -r osx-x64 \
+            -p:SelfContained=false \
+            -p:Version=${{ needs.calculate-version.outputs.version }} \
+            -o publish/osx-x64-fx
+          mv publish/osx-x64-fx/WafSight.Cli publish/osx-x64-fx/wafsight
 
-      - name: Upload osx-x64 artifact
+      - name: Package osx-x64 (AOT)
+        run: tar -czf WafSight-osx-x64.tar.gz -C publish/osx-x64-aot wafsight
+
+      - name: Package osx-x64 (Framework Dependent)
+        run: tar -czf WafSight-osx-x64-framework.tar.gz -C publish/osx-x64-fx .
+
+      - name: Upload osx-x64 AOT artifact
         uses: actions/upload-artifact@v4
         with:
           name: wafsight-osx-x64
           path: WafSight-osx-x64.tar.gz
 
+      - name: Upload osx-x64 Framework artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wafsight-osx-x64-framework
+          path: WafSight-osx-x64-framework.tar.gz
+
   publish-osx-arm64:
     needs: [calculate-version, build-and-test]
     runs-on: macos-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.calculate-version.outputs.skip_release == 'false'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -326,7 +414,7 @@ jobs:
       - name: Restore
         run: dotnet restore
 
-      - name: Publish osx-arm64 (AOT)
+      - name: Publish osx-arm64 (AOT Self-Contained)
         run: |
           set -e
           dotnet publish src/WafSight.Cli/WafSight.Cli.csproj \
@@ -338,18 +426,37 @@ jobs:
             -p:StripSymbols=true \
             -p:IlcFoldIdenticalMethodBodies=true \
             -p:Version=${{ needs.calculate-version.outputs.version }} \
-            -o publish/osx-arm64
-          mv publish/osx-arm64/WafSight.Cli publish/osx-arm64/wafsight
+            -o publish/osx-arm64-aot
+          mv publish/osx-arm64-aot/WafSight.Cli publish/osx-arm64-aot/wafsight
 
-      - name: Package osx-arm64
+      - name: Publish osx-arm64 (Framework Dependent)
         run: |
-          tar -czf WafSight-osx-arm64.tar.gz -C publish/osx-arm64 wafsight
+          set -e
+          dotnet publish src/WafSight.Cli/WafSight.Cli.csproj \
+            -c ${{ env.CONFIGURATION }} \
+            -r osx-arm64 \
+            -p:SelfContained=false \
+            -p:Version=${{ needs.calculate-version.outputs.version }} \
+            -o publish/osx-arm64-fx
+          mv publish/osx-arm64-fx/WafSight.Cli publish/osx-arm64-fx/wafsight
 
-      - name: Upload osx-arm64 artifact
+      - name: Package osx-arm64 (AOT)
+        run: tar -czf WafSight-osx-arm64.tar.gz -C publish/osx-arm64-aot wafsight
+
+      - name: Package osx-arm64 (Framework Dependent)
+        run: tar -czf WafSight-osx-arm64-framework.tar.gz -C publish/osx-arm64-fx .
+
+      - name: Upload osx-arm64 AOT artifact
         uses: actions/upload-artifact@v4
         with:
           name: wafsight-osx-arm64
           path: WafSight-osx-arm64.tar.gz
+
+      - name: Upload osx-arm64 Framework artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wafsight-osx-arm64-framework
+          path: WafSight-osx-arm64-framework.tar.gz
 
   create-release:
     needs:
@@ -360,7 +467,7 @@ jobs:
       - publish-osx-x64
       - publish-osx-arm64
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.calculate-version.outputs.skip_release == 'false'
     environment: github-release
     permissions:
       contents: write
@@ -386,13 +493,19 @@ jobs:
           body: |
             ## WafSight v${{ needs.calculate-version.outputs.version }}
 
-            ### Binários disponíveis (AOT Native, autocontidos):
+            ### Binários AOT (autocontidos, sem dependências):
             - **Windows x64** — `WafSight-win-x64.zip`
             - **Linux x64** — `WafSight-linux-x64.tar.gz`
             - **macOS x64** — `WafSight-osx-x64.tar.gz`
             - **macOS ARM64** — `WafSight-osx-arm64.tar.gz`
 
-            ### Instalação
+            ### Binários Framework Dependent (requer .NET 10 Runtime):
+            - **Windows x64** — `WafSight-win-x64-framework.zip`
+            - **Linux x64** — `WafSight-linux-x64-framework.tar.gz`
+            - **macOS x64** — `WafSight-osx-x64-framework.tar.gz`
+            - **macOS ARM64** — `WafSight-osx-arm64-framework.tar.gz`
+
+            ### Instalação (AOT)
             ```bash
             # Linux / macOS
             tar -xzf WafSight-linux-x64.tar.gz
@@ -401,6 +514,19 @@ jobs:
 
             # Windows (PowerShell)
             Expand-Archive WafSight-win-x64.zip -DestinationPath .
+            .\\wafsight.exe detect https://example.com
+            ```
+
+            ### Instalação (Framework Dependent)
+            ```bash
+            # Install .NET 10 Runtime first: https://dot.net
+            # Linux / macOS
+            tar -xzf WafSight-linux-x64-framework.tar.gz
+            chmod +x wafsight
+            ./wafsight detect https://example.com
+
+            # Windows (PowerShell)
+            Expand-Archive WafSight-win-x64-framework.zip -DestinationPath .
             .\\wafsight.exe detect https://example.com
             ```
 
