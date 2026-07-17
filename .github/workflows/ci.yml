@@ -61,8 +61,10 @@ jobs:
 
       - name: Set skip release output
         id: set_skip
+        env:
+          CODE_CHANGED: ${{ steps.changes.outputs.code_changed }}
         run: |
-          if [ "$(steps.changes.outputs.code_changed)" = "false" ]; then
+          if [ "$CODE_CHANGED" = "false" ]; then
             echo "skip_release=true" >> "$GITHUB_OUTPUT"
           else
             echo "skip_release=false" >> "$GITHUB_OUTPUT"
